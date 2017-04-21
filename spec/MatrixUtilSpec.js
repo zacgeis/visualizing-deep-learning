@@ -1,5 +1,5 @@
-describe('Matrix', () => {
-  var Matrix = require('../lib/Matrix');
+describe('MatrixUtil', () => {
+  var Matrix = require('../lib/MatrixUtil');
 
   describe('generateZero', () => {
     it('returns the correct dimensions', () => {
