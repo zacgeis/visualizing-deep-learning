@@ -1,5 +1,11 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+function getDimension(m) {
+    var rows = m.length;
+    var cols = m[0].length;
+    return [rows, cols];
+}
+exports.getDimension = getDimension;
 function generateZero(rows, cols) {
     return generate(rows, cols, function (row, col) { return 0; });
 }
@@ -19,12 +25,6 @@ function generate(rows, cols, values) {
     return m;
 }
 exports.generate = generate;
-function getDimension(m) {
-    var rows = m.length;
-    var cols = m[0].length;
-    return [rows, cols];
-}
-exports.getDimension = getDimension;
 function multiply(m1, m2) {
     var _a = getDimension(m1), m1Rows = _a[0], m1Cols = _a[1];
     var _b = getDimension(m2), m2Rows = _b[0], m2Cols = _b[1];
@@ -50,21 +50,34 @@ function transpose(m) {
 }
 exports.transpose = transpose;
 function element_wise_apply_two(m1, m2, operation) {
-    return [[]];
+    var _a = getDimension(m1), m1Rows = _a[0], m1Cols = _a[1];
+    var _b = getDimension(m2), m2Rows = _b[0], m2Cols = _b[1];
+    if (m1Rows != m2Rows || m1Cols != m2Cols) {
+        throw 'Matrix size mismatch';
+    }
+    return generate(m1Rows, m1Cols, function (row, col) { return operation(m1[row][col], m2[row][col]); });
 }
 exports.element_wise_apply_two = element_wise_apply_two;
-function element_wise_apply_one() {
+function element_wise_apply_one(m, operation) {
+    var _a = getDimension(m), rows = _a[0], cols = _a[1];
+    return generate(rows, cols, function (row, col) { return operation(m[row][col]); });
 }
 exports.element_wise_apply_one = element_wise_apply_one;
-function element_wise_add() { }
+function element_wise_add(m1, m2) {
+    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 + val2; });
+}
 exports.element_wise_add = element_wise_add;
-function element_wise_subtract() { }
+function element_wise_subtract(m1, m2) {
+    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 - val2; });
+}
 exports.element_wise_subtract = element_wise_subtract;
-function element_wise_multiply() { }
+function element_wise_multiply(m1, m2) {
+    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 * val2; });
+}
 exports.element_wise_multiply = element_wise_multiply;
-function scalar() { }
+function scalar(x, m) {
+    return element_wise_apply_one(m, function (val) { return x * val; });
+}
 exports.scalar = scalar;
-function print() { }
-exports.print = print;
 // (deltae)/(deltaw_1)=
 // start with a hand generate random and zero matrix

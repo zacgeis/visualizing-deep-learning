@@ -1,17 +1,33 @@
 export type Matrix<T> = Array<Array<T>>;
 
+export function getDimension<T>(
+  m: Matrix<T>
+): [number, number] {
+  let rows = m.length;
+  let cols = m[0].length;
+  return [rows, cols];
+}
+
 export function generateZero(
   rows: number,
   cols: number
 ): Matrix<number> {
-  return generate(rows, cols, (row, col) => 0);
+  return generate(
+    rows,
+    cols,
+    (row, col) => 0
+  );
 }
 
 export function generateRandom(
   rows: number,
   cols: number
 ): Matrix<number> {
-  return generate(rows, cols, (row, col) => Math.random() * 2 - 1);
+  return generate(
+    rows,
+    cols,
+    (row, col) => Math.random() * 2 - 1
+  );
 }
 
 export function generate<T>(
@@ -27,14 +43,6 @@ export function generate<T>(
     }
   }
   return m;
-}
-
-export function getDimension<T>(
-  m: Matrix<T>
-): [number, number] {
-  let rows = m.length;
-  let cols = m[0].length;
-  return [rows, cols];
 }
 
 export function multiply(
@@ -63,7 +71,11 @@ export function transpose<T>(
   m: Matrix<T>
 ): Matrix<T> {
   let [mRows, mColumns] = getDimension(m);
-  return generate(mColumns, mRows, (row, column) => m[column][row]);
+  return generate(
+    mColumns,
+    mRows,
+    (row, column) => m[column][row]
+  );
 }
 
 export function element_wise_apply_two<T>(
@@ -71,19 +83,72 @@ export function element_wise_apply_two<T>(
   m2: Matrix<T>,
   operation: { (val1: T, val2: T): T }
 ): Matrix<T> {
-  return [[]];
+  let [m1Rows, m1Cols] = getDimension(m1);
+  let [m2Rows, m2Cols] = getDimension(m2);
+  if(m1Rows != m2Rows || m1Cols != m2Cols) {
+    throw 'Matrix size mismatch';
+  }
+  return generate(
+    m1Rows,
+    m1Cols,
+    (row, col) => operation(m1[row][col], m2[row][col])
+  );
 }
 
-export function element_wise_apply_one() {
-
+export function element_wise_apply_one<T>(
+  m: Matrix<T>,
+  operation: { (val: T): T }
+): Matrix<T> {
+  let [rows, cols] = getDimension(m);
+  return generate(
+    rows,
+    cols,
+    (row, col) => operation(m[row][col])
+  );
 }
 
-export function element_wise_add () {}
-export function element_wise_subtract () {}
-export function element_wise_multiply () {}
-export function scalar() {}
+export function element_wise_add(
+  m1: Matrix<number>,
+  m2: Matrix<number>
+): Matrix<number> {
+  return element_wise_apply_two(
+    m1,
+    m2,
+    (val1, val2) => val1 + val2
+  );
+}
 
-export function print() {}
+export function element_wise_subtract(
+  m1: Matrix<number>,
+  m2: Matrix<number>
+): Matrix<number> {
+  return element_wise_apply_two(
+    m1,
+    m2,
+    (val1, val2) => val1 - val2
+  );
+}
+
+export function element_wise_multiply(
+  m1: Matrix<number>,
+  m2: Matrix<number>
+): Matrix<number> {
+  return element_wise_apply_two(
+    m1,
+    m2,
+    (val1, val2) => val1 * val2
+  );
+}
+
+export function scalar(
+  x: number,
+  m: Matrix<number>
+): Matrix<number> {
+  return element_wise_apply_one(
+    m,
+    (val) => x * val
+  );
+}
 
 // (deltae)/(deltaw_1)=
 // start with a hand generate random and zero matrix

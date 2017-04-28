@@ -26,4 +26,39 @@ describe('MatrixUtil', function () {
             expect(actual).toEqual(expected);
         });
     });
+    describe('element_wise_add', function () {
+        it('works', function () {
+            var a = [[1, 2, 3], [4, 5, 6]];
+            var b = [[3, 2, 0], [-1, -2, -3]];
+            var expected = [[4, 4, 3], [3, 3, 3]];
+            var actual = MatrixUtil.element_wise_add(a, b);
+            expect(actual).toEqual(expected);
+        });
+    });
+    describe('element_wise_subtract', function () {
+        it('works', function () {
+            var a = [[1, 2, 3], [4, 5, 6]];
+            var b = [[3, 2, 0], [-1, -2, -3]];
+            var expected = [[-2, 0, 3], [5, 7, 9]];
+            var actual = MatrixUtil.element_wise_subtract(a, b);
+            expect(actual).toEqual(expected);
+        });
+    });
+    describe('element_wise_multiply', function () {
+        it('works', function () {
+            var a = [[1, 2, 3], [4, 5, 6]];
+            var b = [[0, 2, 1], [1, 0, 2]];
+            var expected = [[0, 4, 3], [4, 0, 12]];
+            var actual = MatrixUtil.element_wise_multiply(a, b);
+            expect(actual).toEqual(expected);
+        });
+    });
+    describe('scalar', function () {
+        it('works', function () {
+            var a = [[1, 2, 3], [4, 5, 6]];
+            var expected = [[3, 6, 9], [12, 15, 18]];
+            var actual = MatrixUtil.scalar(3, a);
+            expect(actual).toEqual(expected);
+        });
+    });
 });
