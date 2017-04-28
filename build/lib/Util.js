@@ -1,19 +1,31 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
 var Activation;
 (function (Activation) {
     function sigmoid(x) {
-        return 0;
+        return 1 / (1 + Math.exp(-x));
     }
     Activation.sigmoid = sigmoid;
-    function sigmoid_deriv(x) {
-        return 0;
+    function sigmoidDeriv(x) {
+        return sigmoid(x) * (1 - sigmoid(x));
     }
-    Activation.sigmoid_deriv = sigmoid_deriv;
+    Activation.sigmoidDeriv = sigmoidDeriv;
     function relu(x) {
-        return 0;
+        if (x > 0) {
+            return x;
+        }
+        else {
+            return 0;
+        }
     }
     Activation.relu = relu;
-    function relu_deriv(x) {
-        return 0;
+    function reluDeriv(x) {
+        if (x < 0) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
     }
-    Activation.relu_deriv = relu_deriv;
-})(Activation || (Activation = {}));
+    Activation.reluDeriv = reluDeriv;
+})(Activation = exports.Activation || (exports.Activation = {}));
