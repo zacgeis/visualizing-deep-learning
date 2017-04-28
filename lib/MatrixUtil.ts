@@ -1,31 +1,46 @@
 export type Matrix<T> = Array<Array<T>>;
 
-export function generateZero(rows: number, cols: number): Matrix<number> {
-  return generate(rows, cols, () => 0);
+export function generateZero(
+  rows: number,
+  cols: number
+): Matrix<number> {
+  return generate(rows, cols, (row, col) => 0);
 }
 
-export function generateRandom(rows: number, cols: number): Matrix<number> {
-  return generate(rows, cols, () => Math.random() * 2 - 1);
+export function generateRandom(
+  rows: number,
+  cols: number
+): Matrix<number> {
+  return generate(rows, cols, (row, col) => Math.random() * 2 - 1);
 }
 
-export function generate(rows: number, cols: number, values: { (): number }): Matrix<number> {
+export function generate<T>(
+  rows: number,
+  cols: number,
+  values: { (row: number, col: number): T }
+): Matrix<T> {
   let m = new Array(rows);
   for(let row = 0; row < rows; row++) {
     m[row] = new Array(cols);
     for(let col = 0; col < cols; col++) {
-      m[row][col] = values();
+      m[row][col] = values(row, col);
     }
   }
   return m;
 }
 
-export function getDimension(m: Matrix<number>): [number, number] {
+export function getDimension<T>(
+  m: Matrix<T>
+): [number, number] {
   let rows = m.length;
   let cols = m[0].length;
   return [rows, cols];
 }
 
-export function multiply(m1: Matrix<number>, m2: Matrix<number>): Matrix<number> {
+export function multiply(
+  m1: Matrix<number>,
+  m2: Matrix<number>
+): Matrix<number> {
   let [m1Rows, m1Cols] = getDimension(m1);
   let [m2Rows, m2Cols] = getDimension(m2);
   if(m1Cols != m2Rows) {
@@ -43,6 +58,32 @@ export function multiply(m1: Matrix<number>, m2: Matrix<number>): Matrix<number>
   }
   return result;
 }
+
+export function transpose<T>(
+  m: Matrix<T>
+): Matrix<T> {
+  let [mRows, mColumns] = getDimension(m);
+  return generate(mColumns, mRows, (row, column) => m[column][row]);
+}
+
+export function element_wise_apply_two<T>(
+  m1: Matrix<T>,
+  m2: Matrix<T>,
+  operation: { (val1: T, val2: T): T }
+): Matrix<T> {
+  return [[]];
+}
+
+export function element_wise_apply_one() {
+
+}
+
+export function element_wise_add () {}
+export function element_wise_subtract () {}
+export function element_wise_multiply () {}
+export function scalar() {}
+
+export function print() {}
 
 // (deltae)/(deltaw_1)=
 // start with a hand generate random and zero matrix
