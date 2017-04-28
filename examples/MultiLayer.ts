@@ -28,7 +28,7 @@ for(let i = 0; i < 10000; i++) {
   let hiddenSum2 = MatrixUtil.multiply(hiddenResult1, weights2);
   let hiddenResult2 = MatrixUtil.mapOneToOne(hiddenSum2, Util.sigmoid);
 
-  console.log(hiddenResult2); //output
+  MatrixUtil.display('Output: ', hiddenResult2);
 
   let error2 = MatrixUtil.elementSubtract(outputTarget, hiddenResult2);
   let gradients2 = MatrixUtil.mapOneToOne(hiddenSum2, Util.sigmoidDeriv);

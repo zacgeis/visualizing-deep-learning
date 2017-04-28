@@ -79,5 +79,22 @@ function scalar(x, m) {
     return mapOneToOne(m, function (val) { return x * val; });
 }
 exports.scalar = scalar;
+function display(name, m) {
+    console.log(name);
+    var _a = getDimension(m), mRows = _a[0], mCols = _a[1];
+    var cap = '';
+    for (var col = 0; col < mCols; col++) {
+        cap += ' ------';
+    }
+    process.stdout.write(cap + '\n');
+    for (var row = 0; row < mRows; row++) {
+        for (var col = 0; col < mCols; col++) {
+            process.stdout.write(' ' + m[row][col].toString().substr(0, 6));
+        }
+        process.stdout.write('\n');
+    }
+    process.stdout.write(cap + '\n\n');
+}
+exports.display = display;
 // (deltae)/(deltaw_1)=
 // start with a hand generate random and zero matrix

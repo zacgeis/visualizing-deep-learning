@@ -150,5 +150,22 @@ export function scalar(
   );
 }
 
+export function display<T>(name: string, m: Matrix<T>): void {
+  console.log(name);
+  let [mRows, mCols] = getDimension(m);
+  let cap = '';
+  for(let col = 0; col < mCols; col++) {
+    cap += ' ------';
+  }
+  process.stdout.write(cap + '\n');
+  for(let row = 0; row < mRows; row++) {
+    for(let col = 0; col < mCols; col++) {
+      process.stdout.write(' ' + m[row][col].toString().substr(0, 6));
+    }
+    process.stdout.write('\n');
+  }
+  process.stdout.write(cap + '\n\n');
+}
+
 // (deltae)/(deltaw_1)=
 // start with a hand generate random and zero matrix
