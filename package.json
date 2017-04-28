@@ -11,7 +11,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "test": "npm run build && JASMINE_CONFIG_PATH=jasmine.json jasmine"
+    "test": "npm run build && JASMINE_CONFIG_PATH=jasmine.json jasmine",
+    "simple": "npm run build && node build/examples/Simple.js",
+    "multi": "npm run build && node build/examples/MultiLayer.js"
   },
   "author": "",
   "license": "ISC"

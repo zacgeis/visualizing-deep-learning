@@ -49,7 +49,7 @@ function transpose(m) {
     return generate(mColumns, mRows, function (row, column) { return m[column][row]; });
 }
 exports.transpose = transpose;
-function element_wise_apply_two(m1, m2, operation) {
+function mapTwoToOne(m1, m2, operation) {
     var _a = getDimension(m1), m1Rows = _a[0], m1Cols = _a[1];
     var _b = getDimension(m2), m2Rows = _b[0], m2Cols = _b[1];
     if (m1Rows != m2Rows || m1Cols != m2Cols) {
@@ -57,26 +57,26 @@ function element_wise_apply_two(m1, m2, operation) {
     }
     return generate(m1Rows, m1Cols, function (row, col) { return operation(m1[row][col], m2[row][col]); });
 }
-exports.element_wise_apply_two = element_wise_apply_two;
-function element_wise_apply_one(m, operation) {
+exports.mapTwoToOne = mapTwoToOne;
+function mapOneToOne(m, operation) {
     var _a = getDimension(m), rows = _a[0], cols = _a[1];
     return generate(rows, cols, function (row, col) { return operation(m[row][col]); });
 }
-exports.element_wise_apply_one = element_wise_apply_one;
-function element_wise_add(m1, m2) {
-    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 + val2; });
+exports.mapOneToOne = mapOneToOne;
+function elementAdd(m1, m2) {
+    return mapTwoToOne(m1, m2, function (val1, val2) { return val1 + val2; });
 }
-exports.element_wise_add = element_wise_add;
-function element_wise_subtract(m1, m2) {
-    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 - val2; });
+exports.elementAdd = elementAdd;
+function elementSubtract(m1, m2) {
+    return mapTwoToOne(m1, m2, function (val1, val2) { return val1 - val2; });
 }
-exports.element_wise_subtract = element_wise_subtract;
-function element_wise_multiply(m1, m2) {
-    return element_wise_apply_two(m1, m2, function (val1, val2) { return val1 * val2; });
+exports.elementSubtract = elementSubtract;
+function elementMultiply(m1, m2) {
+    return mapTwoToOne(m1, m2, function (val1, val2) { return val1 * val2; });
 }
-exports.element_wise_multiply = element_wise_multiply;
+exports.elementMultiply = elementMultiply;
 function scalar(x, m) {
-    return element_wise_apply_one(m, function (val) { return x * val; });
+    return mapOneToOne(m, function (val) { return x * val; });
 }
 exports.scalar = scalar;
 // (deltae)/(deltaw_1)=

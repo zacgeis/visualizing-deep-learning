@@ -78,11 +78,11 @@ export function transpose<T>(
   );
 }
 
-export function element_wise_apply_two<T>(
-  m1: Matrix<T>,
-  m2: Matrix<T>,
-  operation: { (val1: T, val2: T): T }
-): Matrix<T> {
+export function mapTwoToOne<A, B, C>(
+  m1: Matrix<A>,
+  m2: Matrix<B>,
+  operation: { (val1: A, val2: B): C }
+): Matrix<C> {
   let [m1Rows, m1Cols] = getDimension(m1);
   let [m2Rows, m2Cols] = getDimension(m2);
   if(m1Rows != m2Rows || m1Cols != m2Cols) {
@@ -95,10 +95,10 @@ export function element_wise_apply_two<T>(
   );
 }
 
-export function element_wise_apply_one<T>(
-  m: Matrix<T>,
-  operation: { (val: T): T }
-): Matrix<T> {
+export function mapOneToOne<A, B>(
+  m: Matrix<A>,
+  operation: { (val: A): B }
+): Matrix<B> {
   let [rows, cols] = getDimension(m);
   return generate(
     rows,
@@ -107,33 +107,33 @@ export function element_wise_apply_one<T>(
   );
 }
 
-export function element_wise_add(
+export function elementAdd(
   m1: Matrix<number>,
   m2: Matrix<number>
 ): Matrix<number> {
-  return element_wise_apply_two(
+  return mapTwoToOne(
     m1,
     m2,
     (val1, val2) => val1 + val2
   );
 }
 
-export function element_wise_subtract(
+export function elementSubtract(
   m1: Matrix<number>,
   m2: Matrix<number>
 ): Matrix<number> {
-  return element_wise_apply_two(
+  return mapTwoToOne(
     m1,
     m2,
     (val1, val2) => val1 - val2
   );
 }
 
-export function element_wise_multiply(
+export function elementMultiply(
   m1: Matrix<number>,
   m2: Matrix<number>
 ): Matrix<number> {
-  return element_wise_apply_two(
+  return mapTwoToOne(
     m1,
     m2,
     (val1, val2) => val1 * val2
@@ -144,7 +144,7 @@ export function scalar(
   x: number,
   m: Matrix<number>
 ): Matrix<number> {
-  return element_wise_apply_one(
+  return mapOneToOne(
     m,
     (val) => x * val
   );

@@ -26,30 +26,30 @@ describe('MatrixUtil', function () {
             expect(actual).toEqual(expected);
         });
     });
-    describe('element_wise_add', function () {
+    describe('elementAdd', function () {
         it('works', function () {
             var a = [[1, 2, 3], [4, 5, 6]];
             var b = [[3, 2, 0], [-1, -2, -3]];
             var expected = [[4, 4, 3], [3, 3, 3]];
-            var actual = MatrixUtil.element_wise_add(a, b);
+            var actual = MatrixUtil.elementAdd(a, b);
             expect(actual).toEqual(expected);
         });
     });
-    describe('element_wise_subtract', function () {
+    describe('elementSubtract', function () {
         it('works', function () {
             var a = [[1, 2, 3], [4, 5, 6]];
             var b = [[3, 2, 0], [-1, -2, -3]];
             var expected = [[-2, 0, 3], [5, 7, 9]];
-            var actual = MatrixUtil.element_wise_subtract(a, b);
+            var actual = MatrixUtil.elementSubtract(a, b);
             expect(actual).toEqual(expected);
         });
     });
-    describe('element_wise_multiply', function () {
+    describe('elementMultiply', function () {
         it('works', function () {
             var a = [[1, 2, 3], [4, 5, 6]];
             var b = [[0, 2, 1], [1, 0, 2]];
             var expected = [[0, 4, 3], [4, 0, 12]];
-            var actual = MatrixUtil.element_wise_multiply(a, b);
+            var actual = MatrixUtil.elementMultiply(a, b);
             expect(actual).toEqual(expected);
         });
     });

@@ -25,30 +25,30 @@ describe('MatrixUtil', () => {
       expect(actual).toEqual(expected);
     });
   });
-  describe('element_wise_add', () => {
+  describe('elementAdd', () => {
     it('works', () => {
       let a = [[1, 2, 3], [4, 5, 6]];
       let b = [[3, 2, 0], [-1, -2, -3]];
       let expected = [[4, 4, 3], [3, 3, 3]];
-      let actual = MatrixUtil.element_wise_add(a, b);
+      let actual = MatrixUtil.elementAdd(a, b);
       expect(actual).toEqual(expected);
     });
   });
-  describe('element_wise_subtract', () => {
+  describe('elementSubtract', () => {
     it('works', () => {
       let a = [[1, 2, 3], [4, 5, 6]];
       let b = [[3, 2, 0], [-1, -2, -3]];
       let expected = [[-2, 0, 3], [5, 7, 9]];
-      let actual = MatrixUtil.element_wise_subtract(a, b);
+      let actual = MatrixUtil.elementSubtract(a, b);
       expect(actual).toEqual(expected);
     });
   });
-  describe('element_wise_multiply', () => {
+  describe('elementMultiply', () => {
     it('works', () => {
       let a = [[1, 2, 3], [4, 5, 6]];
       let b = [[0, 2, 1], [1, 0, 2]];
       let expected = [[0, 4, 3], [4, 0, 12]];
-      let actual = MatrixUtil.element_wise_multiply(a, b);
+      let actual = MatrixUtil.elementMultiply(a, b);
       expect(actual).toEqual(expected);
     });
   });
