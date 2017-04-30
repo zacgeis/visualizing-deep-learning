@@ -275,9 +275,25 @@ class MathIntro extends React.Component<{}, {}> {
     ];
     return (
       <div className="math-intro">
-        <div className="math-intro-header">Brief Function Guide:</div>
-        <div className="math" ref={(input) => { this.sigmoidElement = input }}></div>
-        <div className="math" ref={(input) => { this.sigmoidDerivElement = input }}></div>
+        <h3 className="math-intro-header">Brief Function Guide:</h3>
+        <h4 className="math-intro-label">Sigmoid:</h4>
+        <table className="display-table">
+          <tr>
+            <td>
+              <div className="math" ref={(input) => { this.sigmoidElement = input }}></div>
+            </td>
+          </tr>
+        </table>
+        <h4 className="math-intro-label">Sigmoid's First Derivative:</h4>
+        <table className="display-table">
+          <tr>
+            <td>
+              <div className="math" ref={(input) => { this.sigmoidDerivElement = input }}></div>
+            </td>
+          </tr>
+        </table>
+        <h4 className="math-intro-label">Matrix Element-Wise Operations</h4>
+        <div className="math-intro-label-sub">This applies to all basic arithmetic operations</div>
         <table className="display-table">
           <tr>
             <td>
@@ -297,6 +313,7 @@ class MathIntro extends React.Component<{}, {}> {
             </td>
           </tr>
         </table>
+        <h4 className="math-intro-label">Matrix Multiplication</h4>
         <table className="display-table">
           <tr>
             <td>
@@ -316,6 +333,7 @@ class MathIntro extends React.Component<{}, {}> {
             </td>
           </tr>
         </table>
+        <h4 className="math-intro-label">Matrix Scalar</h4>
         <table className="display-table">
           <tr>
             <td>
@@ -335,6 +353,7 @@ class MathIntro extends React.Component<{}, {}> {
             </td>
           </tr>
         </table>
+        <h4 className="math-intro-label">Matrix Transpose</h4>
         <table className="display-table">
           <tr>
             <td className="symbol">
@@ -351,6 +370,7 @@ class MathIntro extends React.Component<{}, {}> {
             </td>
           </tr>
         </table>
+        <h4 className="math-intro-label">Matrix Element-Wise Apply</h4>
         <table className="display-table">
           <tr>
             <td className="symbol">
@@ -543,9 +563,10 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
     return (
       <div>
         <MathIntro/>
+        <h3>Interactive Network:</h3>
         <div className="input-section">
           <div className="input-field">
-            Hidden Layer Size: <input value={this.state.tempHiddenLayerSize} onInput={this.handleHiddenLayerSizeChange} />
+            Hidden Neuron Count: <input value={this.state.tempHiddenLayerSize} onInput={this.handleHiddenLayerSizeChange} />
           </div>
           <div className="input-field">
             Learning Rate: <input value={this.state.tempLearningRate} onInput={this.handleLearningRateChange} />
@@ -561,7 +582,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
           <tr>
             <td>
               <div className="display-field">
-                Hidden Layer Size: {this.state.hiddenLayerSize}
+                Hidden Neuron Count: {this.state.hiddenLayerSize}
               </div>
               <div className="display-field">
                 Learning Rate: {this.state.learningRate}

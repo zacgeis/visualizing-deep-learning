@@ -15,7 +15,7 @@ body {
 
 .input-section {
   font-size: 14px;
-  margin-bottom: 20px;
+  margin-top: 30px;
 }
 
 .input-field {
@@ -66,6 +66,14 @@ body {
   border: 1px solid rgba(0,0,0,.4);
   text-align: center;
   font-size: 12px;
+}
+
+.math-intro {
+  margin-bottom: 30px;
+}
+
+.math-intro .display-table {
+  margin-left: 20px;
 }
 
 .math-intro .display-table td {
