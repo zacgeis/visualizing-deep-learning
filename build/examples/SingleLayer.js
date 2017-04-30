@@ -1,6 +1,5 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-var Util = require("../lib/Util");
 var MatrixUtil = require("../lib/MatrixUtil");
 var inputData = [
     [0, 0, 1],
@@ -20,11 +19,11 @@ for (var i = 0; i < 2000; i++) {
     console.log('=== Iteration ' + i + ' ===');
     MatrixUtil.display('Weights:', weights);
     var hiddenSum = MatrixUtil.multiply(inputData, weights);
-    var hiddenResult = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoid);
+    var hiddenResult = MatrixUtil.mapOneToOne(hiddenSum, MatrixUtil.sigmoid);
     MatrixUtil.display('Output: ', hiddenResult);
     var error = MatrixUtil.elementSubtract(outputTarget, hiddenResult);
     MatrixUtil.display('Error:', error);
-    var gradients = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoidDeriv);
+    var gradients = MatrixUtil.mapOneToOne(hiddenSum, MatrixUtil.sigmoidDeriv);
     MatrixUtil.display('Gradients:', gradients);
     var delta = MatrixUtil.scalar(learningRate, MatrixUtil.elementMultiply(gradients, error));
     MatrixUtil.display('Delta:', delta);

@@ -1,11 +1,21 @@
-#root {
+body {
   padding: 30px;
   font-family: 'Inconsolata', monospace;
   color: black;
 }
 
+.title {
+  padding: 0px;
+  margin: 0px;
+}
+
+.intro {
+  padding: 30px 0px;
+  width: 700px;
+}
+
 .input-section {
-  font-size: 16px;
+  font-size: 14px;
   margin-bottom: 20px;
 }
 
@@ -19,12 +29,12 @@
 }
 
 .display-field {
-  font-size: 16px;
+  font-size: 14px;
 }
 
 .iteration-slider {
   margin-top: 20px;
-  font-size: 16px;
+  font-size: 14px;
   width: 300px;
 }
 

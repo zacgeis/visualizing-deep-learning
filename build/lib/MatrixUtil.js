@@ -79,6 +79,47 @@ function scalar(x, m) {
     return mapOneToOne(m, function (val) { return x * val; });
 }
 exports.scalar = scalar;
+function sigmoid(x) {
+    return 1 / (1 + Math.exp(-x));
+}
+exports.sigmoid = sigmoid;
+function sigmoidDeriv(x) {
+    return sigmoid(x) * (1 - sigmoid(x));
+}
+exports.sigmoidDeriv = sigmoidDeriv;
+function relu(x) {
+    if (x > 0) {
+        return x;
+    }
+    else {
+        return 0;
+    }
+}
+exports.relu = relu;
+function reluDeriv(x) {
+    if (x > 0) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+exports.reluDeriv = reluDeriv;
+function sumSquaredError(actual, expected) {
+    var _a = getDimension(actual), actualRows = _a[0], actualCols = _a[1];
+    var _b = getDimension(expected), expectedRows = _b[0], expectedCols = _b[1];
+    if (actualRows != expectedRows || actualCols != expectedCols) {
+        throw 'Matrix size mismatch';
+    }
+    var result = 0;
+    for (var row = 0; row < actualRows; row++) {
+        for (var col = 0; col < actualCols; col++) {
+            result += Math.pow(actual[row][col] - expected[row][col], 2);
+        }
+    }
+    return result / 2;
+}
+exports.sumSquaredError = sumSquaredError;
 function display(name, m) {
     console.log(name);
     var _a = getDimension(m), mRows = _a[0], mCols = _a[1];
@@ -96,5 +137,3 @@ function display(name, m) {
     process.stdout.write(cap + '\n\n');
 }
 exports.display = display;
-// (deltae)/(deltaw_1)=
-// start with a hand generate random and zero matrix

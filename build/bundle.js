@@ -63,7 +63,7 @@
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 5);
+/******/ 	return __webpack_require__(__webpack_require__.s = 4);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -152,35 +152,6 @@ function scalar(x, m) {
     return mapOneToOne(m, function (val) { return x * val; });
 }
 exports.scalar = scalar;
-function display(name, m) {
-    console.log(name);
-    var _a = getDimension(m), mRows = _a[0], mCols = _a[1];
-    var cap = '';
-    for (var col = 0; col < mCols; col++) {
-        cap += ' ------';
-    }
-    process.stdout.write(cap + '\n');
-    for (var row = 0; row < mRows; row++) {
-        for (var col = 0; col < mCols; col++) {
-            process.stdout.write(' ' + m[row][col].toString().substr(0, 6));
-        }
-        process.stdout.write('\n');
-    }
-    process.stdout.write(cap + '\n\n');
-}
-exports.display = display;
-// (deltae)/(deltaw_1)=
-// start with a hand generate random and zero matrix
-
-/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(6)))
-
-/***/ }),
-/* 1 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", { value: true });
 function sigmoid(x) {
     return 1 / (1 + Math.exp(-x));
 }
@@ -207,7 +178,46 @@ function reluDeriv(x) {
     }
 }
 exports.reluDeriv = reluDeriv;
+function sumSquaredError(actual, expected) {
+    var _a = getDimension(actual), actualRows = _a[0], actualCols = _a[1];
+    var _b = getDimension(expected), expectedRows = _b[0], expectedCols = _b[1];
+    if (actualRows != expectedRows || actualCols != expectedCols) {
+        throw 'Matrix size mismatch';
+    }
+    var result = 0;
+    for (var row = 0; row < actualRows; row++) {
+        for (var col = 0; col < actualCols; col++) {
+            result += Math.pow(actual[row][col] - expected[row][col], 2);
+        }
+    }
+    return result / 2;
+}
+exports.sumSquaredError = sumSquaredError;
+function display(name, m) {
+    console.log(name);
+    var _a = getDimension(m), mRows = _a[0], mCols = _a[1];
+    var cap = '';
+    for (var col = 0; col < mCols; col++) {
+        cap += ' ------';
+    }
+    process.stdout.write(cap + '\n');
+    for (var row = 0; row < mRows; row++) {
+        for (var col = 0; col < mCols; col++) {
+            process.stdout.write(' ' + m[row][col].toString().substr(0, 6));
+        }
+        process.stdout.write('\n');
+    }
+    process.stdout.write(cap + '\n\n');
+}
+exports.display = display;
 
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(5)))
+
+/***/ }),
+/* 1 */
+/***/ (function(module, exports) {
+
+module.exports = Plotly;
 
 /***/ }),
 /* 2 */
@@ -223,12 +233,6 @@ module.exports = ReactDOM;
 
 /***/ }),
 /* 4 */
-/***/ (function(module, exports) {
-
-module.exports = katex;
-
-/***/ }),
-/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -246,23 +250,85 @@ var __extends = (this && this.__extends) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 var React = __webpack_require__(2);
 var ReactDOM = __webpack_require__(3);
-var Util = __webpack_require__(1);
 var MatrixUtil = __webpack_require__(0);
-var katex = __webpack_require__(4);
-function matrixToTable(m) {
+var Plotly = __webpack_require__(1);
+function weightToStyle(weight) {
+    var alpha = (Math.min(100, Math.abs(weight * 25)) / 100).toString().substr(0, 4);
+    if (weight < 0) {
+        return {
+            'background-color': 'rgba(0, 255, 255, ' + alpha + ')'
+        };
+    }
+    return {
+        'background-color': 'rgba(255, 150, 0, ' + alpha + ')'
+    };
+}
+function matrixToTable(m, colorize) {
     var rowComponents = [];
     var _a = MatrixUtil.getDimension(m), mRows = _a[0], mCols = _a[1];
     for (var row = 0; row < mRows; row++) {
         var colComponents = [];
         for (var col = 0; col < mCols; col++) {
             var value = m[row][col].toString().substr(0, 8);
-            colComponents.push(React.createElement("td", null, value));
+            var style = {};
+            if (colorize) {
+                style = weightToStyle(m[row][col]);
+            }
+            colComponents.push(React.createElement("td", { style: style }, value));
         }
         rowComponents.push(React.createElement("tr", null, colComponents));
     }
     return (React.createElement("table", { className: "matrix-table" }, rowComponents));
 }
-function generateNetworkState(count, learningRate) {
+var PlotData = (function () {
+    function PlotData() {
+        this.index = 0;
+        this.iteration = [];
+        this.traces = {};
+    }
+    PlotData.prototype.addPoints = function (points) {
+        this.iteration.push(this.index++);
+        for (var name_1 in points) {
+            if (!this.traces.hasOwnProperty(name_1)) {
+                this.traces[name_1] = [];
+            }
+            this.traces[name_1].push(points[name_1]);
+        }
+    };
+    PlotData.prototype.getSingleTrace = function (name, values) {
+        return {
+            x: this.iteration,
+            y: values,
+            mode: 'lines',
+            name: name,
+            line: {
+                width: 1
+            }
+        };
+    };
+    PlotData.prototype.getPlotlyFormattedData = function () {
+        var data = [];
+        for (var name_2 in this.traces) {
+            data.push(this.getSingleTrace(name_2, this.traces[name_2]));
+        }
+        return data;
+    };
+    PlotData.prototype.render = function (div, title) {
+        Plotly.purge(div);
+        var layout = {
+            width: 480,
+            height: 400,
+            title: title,
+            xaxis: {
+                title: 'Iterations'
+            }
+        };
+        var data = this.getPlotlyFormattedData();
+        Plotly.newPlot(div, data, layout);
+    };
+    return PlotData;
+}());
+function generateNetworkState(count, learningRate, hiddenLayerSize) {
     var inputData = [
         [0, 0, 1],
         [0, 1, 1],
@@ -271,35 +337,62 @@ function generateNetworkState(count, learningRate) {
     ];
     var outputTarget = [
         [0],
+        [1],
+        [1],
         [0],
-        [1],
-        [1],
     ];
-    var weights = MatrixUtil.generateRandom(3, 1);
     var iterations = [];
+    var plotData = new PlotData();
+    var sumSquaredError = 0;
+    var weights1 = MatrixUtil.generateRandom(3, hiddenLayerSize);
+    var weights2 = MatrixUtil.generateRandom(hiddenLayerSize, 1);
     for (var i = 0; i <= count; i++) {
-        var hiddenSum = MatrixUtil.multiply(inputData, weights);
-        var hiddenResult = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoid);
-        var error = MatrixUtil.elementSubtract(outputTarget, hiddenResult);
-        var gradients = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoidDeriv);
-        var delta = MatrixUtil.scalar(learningRate, MatrixUtil.elementMultiply(gradients, error));
-        var weightUpdates = MatrixUtil.multiply(MatrixUtil.transpose(inputData), delta);
-        iterations.push({
-            weights: weights,
-            hiddenSum: hiddenSum,
-            hiddenResult: hiddenResult,
-            error: error,
-            gradients: gradients,
-            delta: delta,
-            weightUpdates: weightUpdates
+        var hiddenSum1 = MatrixUtil.multiply(inputData, weights1);
+        var hiddenResult1 = MatrixUtil.mapOneToOne(hiddenSum1, MatrixUtil.sigmoid);
+        var hiddenSum2 = MatrixUtil.multiply(hiddenResult1, weights2);
+        var hiddenResult2 = MatrixUtil.mapOneToOne(hiddenSum2, MatrixUtil.sigmoid);
+        var error2 = MatrixUtil.elementSubtract(outputTarget, hiddenResult2);
+        var gradients2 = MatrixUtil.mapOneToOne(hiddenSum2, MatrixUtil.sigmoidDeriv);
+        var delta2 = MatrixUtil.elementMultiply(gradients2, error2);
+        var error1 = MatrixUtil.multiply(delta2, MatrixUtil.transpose(weights2));
+        var gradients1 = MatrixUtil.mapOneToOne(hiddenSum1, MatrixUtil.sigmoidDeriv);
+        var delta1 = MatrixUtil.elementMultiply(gradients1, error1);
+        var weightUpdates1 = MatrixUtil.scalar(learningRate, MatrixUtil.multiply(MatrixUtil.transpose(inputData), delta1));
+        var weightUpdates2 = MatrixUtil.scalar(learningRate, MatrixUtil.multiply(MatrixUtil.transpose(hiddenResult1), delta2));
+        iterations.push([
+            {
+                weights: weights1,
+                hiddenSum: hiddenSum1,
+                hiddenResult: hiddenResult1,
+                error: error1,
+                gradients: gradients1,
+                delta: delta1,
+                weightUpdates: weightUpdates1
+            },
+            {
+                weights: weights2,
+                hiddenSum: hiddenSum2,
+                hiddenResult: hiddenResult2,
+                error: error2,
+                gradients: gradients2,
+                delta: delta2,
+                weightUpdates: weightUpdates2
+            }
+        ]);
+        weights1 = MatrixUtil.elementAdd(weightUpdates1, weights1);
+        weights2 = MatrixUtil.elementAdd(weightUpdates2, weights2);
+        sumSquaredError = MatrixUtil.sumSquaredError(hiddenResult2, outputTarget);
+        plotData.addPoints({
+            error: sumSquaredError,
         });
-        weights = MatrixUtil.elementAdd(weightUpdates, weights);
     }
     return {
         learningRate: learningRate,
         inputData: inputData,
         outputTarget: outputTarget,
-        iterations: iterations
+        iterations: iterations,
+        plotData: plotData,
+        finalError: sumSquaredError
     };
 }
 var IterationSlider = (function (_super) {
@@ -334,10 +427,13 @@ var SingleLayerDisplay = (function (_super) {
         var _this = _super.call(this, props) || this;
         var defaultCount = 10;
         var defaultLearningRate = 0.1;
+        var defaultHiddenLayerSize = 4;
         _this.state = {
-            networkState: generateNetworkState(defaultCount, defaultLearningRate),
+            networkState: generateNetworkState(defaultCount, defaultLearningRate, defaultHiddenLayerSize),
             learningRate: defaultLearningRate,
             count: defaultCount,
+            hiddenLayerSize: defaultHiddenLayerSize,
+            tempHiddenLayerSize: defaultHiddenLayerSize,
             tempLearningRate: defaultLearningRate,
             tempCount: defaultCount,
             iteration: 0
@@ -345,6 +441,7 @@ var SingleLayerDisplay = (function (_super) {
         _this.handleIterationChange = _this.handleIterationChange.bind(_this);
         _this.handleLearningRateChange = _this.handleLearningRateChange.bind(_this);
         _this.handleIterationCountChange = _this.handleIterationCountChange.bind(_this);
+        _this.handleHiddenLayerSizeChange = _this.handleHiddenLayerSizeChange.bind(_this);
         _this.handleGenerate = _this.handleGenerate.bind(_this);
         return _this;
     }
@@ -363,20 +460,33 @@ var SingleLayerDisplay = (function (_super) {
             tempCount: event.target.value
         });
     };
+    SingleLayerDisplay.prototype.handleHiddenLayerSizeChange = function (event) {
+        this.setState({
+            tempHiddenLayerSize: event.target.value
+        });
+    };
     SingleLayerDisplay.prototype.handleGenerate = function () {
+        var newState = generateNetworkState(this.state.tempCount, this.state.tempLearningRate, this.state.tempHiddenLayerSize);
         this.setState({
             count: this.state.tempCount,
             learningRate: this.state.tempLearningRate,
-            networkState: generateNetworkState(this.state.tempCount, this.state.tempLearningRate)
+            networkState: newState,
+            hiddenLayerSize: this.state.tempHiddenLayerSize
         });
+        newState.plotData.render('error-plot', 'Error');
     };
-    // TODO: show equations with values filled in.
-    // TODO: show graphs.
+    SingleLayerDisplay.prototype.componentDidMount = function () {
+        this.state.networkState.plotData.render('error-plot', 'Error');
+    };
     SingleLayerDisplay.prototype.render = function () {
-        var currentIteration = this.state.networkState.iterations[this.state.iteration];
-        var test = { __html: katex.renderToString("c = \\pm\\sqrt{a^2 + b^2}") };
+        var layer1 = this.state.networkState.iterations[this.state.iteration][0];
+        var layer2 = this.state.networkState.iterations[this.state.iteration][1];
+        var finalError = this.state.networkState.finalError;
         return (React.createElement("div", null,
             React.createElement("div", { className: "input-section" },
+                React.createElement("div", { className: "input-field" },
+                    "Hidden Layer Size: ",
+                    React.createElement("input", { value: this.state.tempHiddenLayerSize, onInput: this.handleHiddenLayerSizeChange })),
                 React.createElement("div", { className: "input-field" },
                     "Learning Rate: ",
                     React.createElement("input", { value: this.state.tempLearningRate, onInput: this.handleLearningRateChange })),
@@ -385,48 +495,86 @@ var SingleLayerDisplay = (function (_super) {
                     React.createElement("input", { value: this.state.tempCount, onInput: this.handleIterationCountChange })),
                 React.createElement("button", { className: "generate-button", onClick: this.handleGenerate }, "Generate")),
             React.createElement("div", { className: "display-field" },
+                "Hidden Layer Size: ",
+                this.state.hiddenLayerSize),
+            React.createElement("div", { className: "display-field" },
                 "Learning Rate: ",
                 this.state.learningRate),
             React.createElement("div", { className: "display-field" },
                 "Iteration Count: ",
                 this.state.count),
+            React.createElement("div", { className: "display-field" },
+                "Final Error: ",
+                finalError),
             React.createElement(IterationSlider, { min: 0, max: this.state.count, onIterationChange: this.handleIterationChange }),
             React.createElement("table", { className: "display-table" },
                 React.createElement("tr", null,
                     React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Forward")),
+                        React.createElement("div", { className: "matrix-header" }, "Forward Layer 1")),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Inputs"),
-                        matrixToTable(this.state.networkState.inputData)),
+                        matrixToTable(this.state.networkState.inputData, false)),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Weights"),
-                        matrixToTable(currentIteration.weights)),
+                        matrixToTable(layer1.weights, true)),
                     React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Hidden Sum"),
-                        matrixToTable(currentIteration.hiddenSum)),
+                        React.createElement("div", { className: "matrix-header" }, "Weighted Sum"),
+                        matrixToTable(layer1.hiddenSum, false)),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Output"),
-                        matrixToTable(currentIteration.hiddenResult)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Target Output"),
-                        matrixToTable(this.state.networkState.outputTarget)))),
+                        matrixToTable(layer1.hiddenResult, false)))),
             React.createElement("table", { className: "display-table" },
                 React.createElement("tr", null,
                     React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Back Prop")),
+                        React.createElement("div", { className: "matrix-header" }, "Forward Layer 2")),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Inputs (Layer 1 Output)"),
+                        matrixToTable(layer1.hiddenResult, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Weights"),
+                        matrixToTable(layer2.weights, true)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Weighted Sum"),
+                        matrixToTable(layer2.hiddenSum, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Output"),
+                        matrixToTable(layer2.hiddenResult, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Target Output"),
+                        matrixToTable(this.state.networkState.outputTarget, false)))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Back Prop Layer 2")),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Error"),
-                        matrixToTable(currentIteration.error)),
+                        matrixToTable(layer2.error, false)),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Gradients"),
-                        matrixToTable(currentIteration.gradients)),
+                        matrixToTable(layer2.gradients, false)),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Delta"),
-                        matrixToTable(currentIteration.delta)),
+                        matrixToTable(layer2.delta, false)),
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Weight Updates"),
-                        matrixToTable(currentIteration.weightUpdates)))),
-            React.createElement("div", { dangerouslySetInnerHTML: test })));
+                        matrixToTable(layer2.weightUpdates, false)))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Back Prop Layer 1")),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Error"),
+                        matrixToTable(layer1.error, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Gradients"),
+                        matrixToTable(layer1.gradients, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Delta"),
+                        matrixToTable(layer1.delta, false)),
+                    React.createElement("td", null,
+                        React.createElement("div", { className: "matrix-header" }, "Weight Updates"),
+                        matrixToTable(layer1.weightUpdates, false)))),
+            React.createElement("div", { id: "error-plot" })));
     };
     return SingleLayerDisplay;
 }(React.Component));
@@ -434,7 +582,7 @@ ReactDOM.render(React.createElement(SingleLayerDisplay, null), document.getEleme
 
 
 /***/ }),
-/* 6 */
+/* 5 */
 /***/ (function(module, exports) {
 
 // shim for using process in browser

@@ -1,4 +1,3 @@
-import * as Util from "../lib/Util";
 import * as MatrixUtil from "../lib/MatrixUtil";
 
 let inputData = [
@@ -23,13 +22,13 @@ for(let i = 0; i < 2000; i++) {
   MatrixUtil.display('Weights:', weights);
 
   let hiddenSum = MatrixUtil.multiply(inputData, weights);
-  let hiddenResult = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoid);
+  let hiddenResult = MatrixUtil.mapOneToOne(hiddenSum, MatrixUtil.sigmoid);
   MatrixUtil.display('Output: ', hiddenResult);
 
   let error = MatrixUtil.elementSubtract(outputTarget, hiddenResult);
   MatrixUtil.display('Error:', error);
 
-  let gradients = MatrixUtil.mapOneToOne(hiddenSum, Util.sigmoidDeriv);
+  let gradients = MatrixUtil.mapOneToOne(hiddenSum, MatrixUtil.sigmoidDeriv);
   MatrixUtil.display('Gradients:', gradients);
 
   let delta = MatrixUtil.scalar(learningRate, MatrixUtil.elementMultiply(gradients, error));

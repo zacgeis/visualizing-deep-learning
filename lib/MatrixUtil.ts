@@ -150,6 +150,48 @@ export function scalar(
   );
 }
 
+export function sigmoid(x: number): number {
+  return 1 / (1 + Math.exp(-x));
+}
+
+export function sigmoidDeriv(x: number): number {
+  return sigmoid(x) * (1 - sigmoid(x));
+}
+
+export function relu(x: number): number {
+  if(x > 0) {
+    return x;
+  } else {
+    return 0;
+  }
+}
+
+export function reluDeriv(x: number): number {
+  if(x > 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
+
+export function sumSquaredError(
+  actual: Matrix<number>,
+  expected: Matrix<number>
+): number {
+  let [actualRows, actualCols] = getDimension(actual);
+  let [expectedRows, expectedCols] = getDimension(expected);
+  if(actualRows != expectedRows || actualCols != expectedCols) {
+    throw 'Matrix size mismatch';
+  }
+  let result = 0;
+  for(let row = 0; row < actualRows; row++) {
+    for(let col = 0; col < actualCols; col++) {
+      result += Math.pow(actual[row][col] - expected[row][col], 2);
+    }
+  }
+  return result / 2;
+}
+
 export function display<T>(name: string, m: Matrix<T>): void {
   console.log(name);
   let [mRows, mCols] = getDimension(m);
@@ -166,6 +208,3 @@ export function display<T>(name: string, m: Matrix<T>): void {
   }
   process.stdout.write(cap + '\n\n');
 }
-
-// (deltae)/(deltaw_1)=
-// start with a hand generate random and zero matrix

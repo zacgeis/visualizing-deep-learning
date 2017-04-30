@@ -6,6 +6,7 @@ module.exports = {
 	externals: {
 		"react": "React",
 		"react-dom": "ReactDOM",
-    "katex": "katex"
+    "katex": "katex",
+    "plotly.js": "Plotly",
 	}
 };

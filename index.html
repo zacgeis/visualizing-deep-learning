@@ -8,8 +8,29 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.7.1/katex.min.js" integrity="sha384-/y1Nn9+QQAipbNQWU65krzJralCnuOasHncUFXGkdwntGeSvQicrYkiUBwsgUqc1" crossorigin="anonymous"></script>
     <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
     <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+    <script type="text/javascript" src="https://cdn.plot.ly/plotly-latest.min.js"></script>
   </head>
   <body>
+    <h2 class="title">Visualizing Deep Learning</h2>
+    <div class="intro">
+      The following is a visualization of the neural network described in this blog post:
+      <a href="http://iamtrask.github.io/2015/07/12/basic-python-network/">Basic Python Network</a>
+      <br/>
+      Here is the implementation of the network that this page uses:
+      <a href="examples/MultiLayer.ts">MultiLayer.ts</a>
+      <br/>
+      For a simpler single layer network see here:
+      <a href="examples/SingleLayer.ts">SingleLayer.ts</a>
+      <br/>
+      Both networks rely on only vanilla JavaScript and a simple matrix library I put together:
+      <a href="examples/MatrixUtil.ts">MatrixUtil.ts</a>
+      <br/>
+      The defaulted iteration count is 10 to prevent the page from executing too many calculations on first load.  You should be able to
+      get accurate results by setting the iteration count to 10000.
+      <br/>
+      <br/>
+      I've always found that interactive models like this help me learn the best! Hope you find this helpful as well.
+    </div>
     <div id="root"></div>
     <script src="build/bundle.js"></script>
   </body>
