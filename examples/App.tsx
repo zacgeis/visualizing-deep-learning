@@ -19,7 +19,7 @@ function weightToStyle(weight: number) {
 }
 
 function matrixToTable(m: Matrix<number>, colorize: boolean): JSX.Element {
-	let rowComponents: JSX.Element[] = [];
+  let rowComponents: JSX.Element[] = [];
   let [mRows, mCols] = MatrixUtil.getDimension(m);
   for(let row = 0; row < mRows; row++) {
     let colComponents: JSX.Element[] = [];
@@ -33,7 +33,7 @@ function matrixToTable(m: Matrix<number>, colorize: boolean): JSX.Element {
     }
     rowComponents.push(<tr>{colComponents}</tr>);
   }
-	return (<table className="matrix-table">{rowComponents}</table>);
+  return (<table className="matrix-table">{rowComponents}</table>);
 }
 
 interface IterationState {
@@ -66,15 +66,15 @@ class PlotData {
     }
   }
   getSingleTrace(name, values) {
-		return {
-			x: this.iteration,
-			y: values,
-			mode: 'lines',
-			name: name,
-			line: {
-				width: 1
-			}
-		};
+    return {
+      x: this.iteration,
+      y: values,
+      mode: 'lines',
+      name: name,
+      line: {
+        width: 1
+      }
+    };
   }
   getPlotlyFormattedData() {
     let data: any = [];
@@ -85,17 +85,17 @@ class PlotData {
   }
   render(div: string, title: string) {
     Plotly.purge(div);
-		let layout = {
-			width: 480,
-			height: 400,
+    let layout = {
+      width: 480,
+      height: 400,
       title: title,
       xaxis: {
         title: 'Iterations'
       }
-		};
+    };
 
-		let data = this.getPlotlyFormattedData();
-		Plotly.newPlot(div, data, layout);
+    let data = this.getPlotlyFormattedData();
+    Plotly.newPlot(div, data, layout);
   }
 }
 
@@ -111,10 +111,10 @@ interface NetworkState {
 
 function generateNetworkState(count: number, learningRate: number, hiddenLayerSize: number): NetworkState {
   let inputData = [
-      [0,0,1],
-      [0,1,1],
-      [1,0,1],
-      [1,1,1],
+    [0,0,1],
+    [0,1,1],
+    [1,0,1],
+    [1,1,1],
   ];
 
   let outputTarget = [
@@ -216,78 +216,78 @@ class IterationSlider extends React.Component<IterationSliderProps, IterationSli
 }
 
 function renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2) {
-	let height = 400;
-	let verticalSep = 30;
-	let horizontalSep = 60;
-	let nodeRadius = 10;
-	let x = 30 + nodeRadius;
+  let height = 400;
+  let verticalSep = 30;
+  let horizontalSep = 60;
+  let nodeRadius = 10;
+  let x = 30 + nodeRadius;
 
-	let layer1Count = styledWeights1.length;
-	let layer2Count = styledWeights1[0].length;
-	let layer3Count = styledWeights2[0].length;
+  let layer1Count = styledWeights1.length;
+  let layer2Count = styledWeights1[0].length;
+  let layer3Count = styledWeights2[0].length;
 
-	let layer1Locs: number[][] = [];
-	let layer2Locs: number[][] = [];
-	let layer3Locs: number[][] = [];
+  let layer1Locs: number[][] = [];
+  let layer2Locs: number[][] = [];
+  let layer3Locs: number[][] = [];
 
-	let totalNodeHeight = nodeRadius * 2 + verticalSep;
-	let totalNodeWidth = nodeRadius * 2 + horizontalSep;
+  let totalNodeHeight = nodeRadius * 2 + verticalSep;
+  let totalNodeWidth = nodeRadius * 2 + horizontalSep;
 
-	let layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
-	let layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
-	let layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
+  let layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
+  let layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
+  let layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
 
   ctx.lineWidth = 1;
   ctx.strokeStyle = 'black';
-	for(let i = 0; i < layer1Count; i++) {
-		ctx.beginPath();
-		ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
-		layer1Locs.push([x, layer1StartY]);
-		layer1StartY += totalNodeHeight;
-		ctx.stroke();
-	}
-	x += totalNodeWidth;
+  for(let i = 0; i < layer1Count; i++) {
+    ctx.beginPath();
+    ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
+    layer1Locs.push([x, layer1StartY]);
+    layer1StartY += totalNodeHeight;
+    ctx.stroke();
+  }
+  x += totalNodeWidth;
 
-	for(let i = 0; i < layer2Count; i++) {
-		ctx.beginPath();
-		ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
-		layer2Locs.push([x, layer2StartY]);
-		layer2StartY += totalNodeHeight;
-		ctx.stroke();
-	}
-	x += totalNodeWidth;
+  for(let i = 0; i < layer2Count; i++) {
+    ctx.beginPath();
+    ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
+    layer2Locs.push([x, layer2StartY]);
+    layer2StartY += totalNodeHeight;
+    ctx.stroke();
+  }
+  x += totalNodeWidth;
 
-	for(let i = 0; i < layer3Count; i++) {
-		ctx.beginPath();
-		ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
-		layer3Locs.push([x, layer3StartY]);
-		layer3StartY += totalNodeHeight;
-		ctx.stroke();
-	}
+  for(let i = 0; i < layer3Count; i++) {
+    ctx.beginPath();
+    ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
+    layer3Locs.push([x, layer3StartY]);
+    layer3StartY += totalNodeHeight;
+    ctx.stroke();
+  }
 
   ctx.lineWidth = 2;
-	for(let i = 0; i < layer1Locs.length; i++) {
-		for(let j = 0; j < layer2Locs.length; j++) {
-			ctx.beginPath();
-			ctx.strokeStyle = styledWeights1[i][j];
-			ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
-			ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
-			ctx.stroke();
-		}
-	}
-	for(let i = 0; i < layer2Locs.length; i++) {
-		for(let j = 0; j < layer3Locs.length; j++) {
-			ctx.beginPath();
-			ctx.strokeStyle = styledWeights2[i][j];
-			ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
-			ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
-			ctx.stroke();
-		}
-	}
+  for(let i = 0; i < layer1Locs.length; i++) {
+    for(let j = 0; j < layer2Locs.length; j++) {
+      ctx.beginPath();
+      ctx.strokeStyle = styledWeights1[i][j];
+      ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
+      ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+      ctx.stroke();
+    }
+  }
+  for(let i = 0; i < layer2Locs.length; i++) {
+    for(let j = 0; j < layer3Locs.length; j++) {
+      ctx.beginPath();
+      ctx.strokeStyle = styledWeights2[i][j];
+      ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
+      ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+      ctx.stroke();
+    }
+  }
 }
 
 function renderCanvasGraph(styledWeights1, styledWeights2) {
-	let canvas = document.getElementById('canvas-graph') as HTMLCanvasElement;
+  let canvas = document.getElementById('canvas-graph') as HTMLCanvasElement;
   let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
   ctx.clearRect(0, 0, 250, 400);
   renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2);
@@ -511,12 +511,12 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
         </table>
         <table>
           <tr>
-          <td>
+            <td>
               <canvas id="canvas-graph" width="250" height="400"></canvas>
-          </td>
-          <td>
+            </td>
+            <td>
               <div id="error-plot"></div>
-          </td>
+            </td>
           </tr>
         </table>
       </div>
