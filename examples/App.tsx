@@ -193,13 +193,14 @@ interface IterationSliderProps {
   min: number;
   max: number;
   onIterationChange: { (number): void };
+  startValue: number;
 }
 interface IterationSliderState { value: number; }
 class IterationSlider extends React.Component<IterationSliderProps, IterationSliderState> {
   constructor(props) {
     super(props);
     this.state = {
-      value: props.min
+      value: props.startValue
     };
     this.handleChange = this.handleChange.bind(this);
   }
@@ -242,7 +243,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
       tempHiddenLayerSize: defaultHiddenLayerSize,
       tempLearningRate: defaultLearningRate,
       tempCount: defaultCount,
-      iteration: 0
+      iteration: defaultCount
     };
     this.handleIterationChange = this.handleIterationChange.bind(this);
     this.handleLearningRateChange = this.handleLearningRateChange.bind(this);
@@ -317,7 +318,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
         <div className="display-field">
           Final Error: {finalError}
         </div>
-        <IterationSlider min={0} max={this.state.count} onIterationChange={this.handleIterationChange}/>
+        <IterationSlider min={0} max={this.state.count} startValue={this.state.iteration} onIterationChange={this.handleIterationChange}/>
         <table className="display-table">
           <tr>
             <td>

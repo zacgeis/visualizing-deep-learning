@@ -162,7 +162,7 @@ var IterationSlider = (function (_super) {
     function IterationSlider(props) {
         var _this = _super.call(this, props) || this;
         _this.state = {
-            value: props.min
+            value: props.startValue
         };
         _this.handleChange = _this.handleChange.bind(_this);
         return _this;
@@ -198,7 +198,7 @@ var SingleLayerDisplay = (function (_super) {
             tempHiddenLayerSize: defaultHiddenLayerSize,
             tempLearningRate: defaultLearningRate,
             tempCount: defaultCount,
-            iteration: 0
+            iteration: defaultCount
         };
         _this.handleIterationChange = _this.handleIterationChange.bind(_this);
         _this.handleLearningRateChange = _this.handleLearningRateChange.bind(_this);
@@ -268,7 +268,7 @@ var SingleLayerDisplay = (function (_super) {
             React.createElement("div", { className: "display-field" },
                 "Final Error: ",
                 finalError),
-            React.createElement(IterationSlider, { min: 0, max: this.state.count, onIterationChange: this.handleIterationChange }),
+            React.createElement(IterationSlider, { min: 0, max: this.state.count, startValue: this.state.iteration, onIterationChange: this.handleIterationChange }),
             React.createElement("table", { className: "display-table" },
                 React.createElement("tr", null,
                     React.createElement("td", null,
