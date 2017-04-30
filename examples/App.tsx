@@ -667,6 +667,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
               </td>
             </tr>
           </table>
+          <div className="section-header">Output: </div>
           <table className="display-table">
             <tr>
               <td>
@@ -685,7 +686,9 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
               </td>
             </tr>
           </table>
-          <div className="section-header">Output: </div>
+        </div>
+        <div className="section">
+          <div className="section-header">Back Propagation Pass: </div>
           <table className="display-table">
             <tr>
               <td>
@@ -708,9 +711,6 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
               </td>
             </tr>
           </table>
-        </div>
-        <div className="section">
-          <div className="section-header">Back Propagation Pass: </div>
           <table className="display-table">
             <tr>
               <td>
