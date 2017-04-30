@@ -471,7 +471,7 @@ var MathIntro = (function (_super) {
         var adot = [['a*x11', 'a*x12'], ['a*x21', 'a*x22']];
         var fx = [['f(x11)', 'f(x12)'], ['f(x21)', 'f(x22)']];
         var x23 = [['x11', 'x12', 'x13'], ['x21', 'x22', 'x23']];
-        var transpose = [['x11', '21'], ['x12', '22'], ['x21', '23']];
+        var transpose = [['x11', 'x21'], ['x12', 'x22'], ['x21', 'x23']];
         var y32 = [['y11', 'y12'], ['y21', 'y22'], ['y31', 'y32']];
         var xydot = [
             [
