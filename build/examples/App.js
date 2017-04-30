@@ -513,7 +513,6 @@ var SingleLayerDisplay = (function (_super) {
                         React.createElement("td", null,
                             React.createElement("div", { className: "matrix-header" }, "L2 Weights"),
                             React.createElement(MatrixTable, { matrix: layer2.weights, colorize: true })))),
-                React.createElement("div", { className: "section-header" }, "Output: "),
                 React.createElement("table", { className: "display-table" },
                     React.createElement("tr", null,
                         React.createElement("td", null,

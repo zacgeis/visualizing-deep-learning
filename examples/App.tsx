@@ -667,7 +667,6 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
               </td>
             </tr>
           </table>
-          <div className="section-header">Output: </div>
           <table className="display-table">
             <tr>
               <td>
