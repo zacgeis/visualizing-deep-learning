@@ -261,7 +261,7 @@ class MathIntro extends React.Component<{}, {}> {
     let fx = [['f(x11)', 'f(x12)'], ['f(x21)', 'f(x22)']];
 
     let x23 = [['x11', 'x12', 'x13'], ['x21', 'x22', 'x23']];
-    let transpose = [['x11', '21'], ['x12', '22'], ['x21', '23']];
+    let transpose = [['x11', 'x21'], ['x12', 'x22'], ['x21', 'x23']];
     let y32 = [['y11', 'y12'], ['y21', 'y22'], ['y31', 'y32']];
     let xydot = [
       [
