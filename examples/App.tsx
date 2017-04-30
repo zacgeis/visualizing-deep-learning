@@ -823,7 +823,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
                 <MatrixTable matrix={layer1.weightUpdates} colorize={false}/>
               </td>
               <td className="symbol">
-                = {this.state.learningRate} · T(
+                = {this.state.learningRate} · (T(
               </td>
               <td>
                 <div className="matrix-header">Inputs</div>
@@ -836,6 +836,9 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
                 <div className="matrix-header">L1 Delta</div>
                 <MatrixTable matrix={layer1.delta} colorize={false}/>
               </td>
+              <td className="symbol">
+                )
+              </td>
             </tr>
           </table>
           <table className="display-table">
@@ -845,7 +848,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
                 <MatrixTable matrix={layer2.weightUpdates} colorize={false}/>
               </td>
               <td className="symbol">
-                = {this.state.learningRate} · T(
+                = {this.state.learningRate} · (T(
               </td>
               <td>
                 <div className="matrix-header">L1 Output</div>
@@ -857,6 +860,9 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
               <td>
                 <div className="matrix-header">L2 Delta</div>
                 <MatrixTable matrix={layer2.delta} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
               </td>
             </tr>
           </table>
