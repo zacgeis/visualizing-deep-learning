@@ -469,6 +469,7 @@ var SingleLayerDisplay = (function (_super) {
         var newState = generateNetworkState(this.state.tempCount, this.state.tempLearningRate, this.state.tempHiddenLayerSize);
         this.setState({
             count: this.state.tempCount,
+            iteration: this.state.tempCount,
             learningRate: this.state.tempLearningRate,
             networkState: newState,
             hiddenLayerSize: this.state.tempHiddenLayerSize
