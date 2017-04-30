@@ -161,15 +161,11 @@ var IterationSlider = (function (_super) {
     __extends(IterationSlider, _super);
     function IterationSlider(props) {
         var _this = _super.call(this, props) || this;
-        _this.state = {
-            value: props.startValue
-        };
         _this.handleChange = _this.handleChange.bind(_this);
         return _this;
     }
     IterationSlider.prototype.handleChange = function (event) {
         var value = event.target.value;
-        this.setState({ value: value });
         this.props.onIterationChange(value);
     };
     IterationSlider.prototype.render = function () {
@@ -178,8 +174,8 @@ var IterationSlider = (function (_super) {
                 "Iteration (of ",
                 this.props.max,
                 "): ",
-                this.state.value),
-            React.createElement("input", { type: "range", onChange: this.handleChange, min: this.props.min, max: this.props.max, value: this.state.value, step: "1" })));
+                this.props.value),
+            React.createElement("input", { type: "range", onChange: this.handleChange, min: this.props.min, max: this.props.max, value: this.props.value, step: "1" })));
     };
     return IterationSlider;
 }(React.Component));
@@ -269,7 +265,7 @@ var SingleLayerDisplay = (function (_super) {
             React.createElement("div", { className: "display-field" },
                 "Final Error: ",
                 finalError),
-            React.createElement(IterationSlider, { min: 0, max: this.state.count, startValue: this.state.iteration, onIterationChange: this.handleIterationChange }),
+            React.createElement(IterationSlider, { min: 0, max: this.state.count, value: this.state.iteration, onIterationChange: this.handleIterationChange }),
             React.createElement("table", { className: "display-table" },
                 React.createElement("tr", null,
                     React.createElement("td", null,

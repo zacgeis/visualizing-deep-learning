@@ -192,28 +192,24 @@ function generateNetworkState(count: number, learningRate: number, hiddenLayerSi
 interface IterationSliderProps {
   min: number;
   max: number;
+  value: number;
   onIterationChange: { (number): void };
-  startValue: number;
 }
 interface IterationSliderState { value: number; }
 class IterationSlider extends React.Component<IterationSliderProps, IterationSliderState> {
   constructor(props) {
     super(props);
-    this.state = {
-      value: props.startValue
-    };
     this.handleChange = this.handleChange.bind(this);
   }
   handleChange(event) {
     let value = event.target.value;
-    this.setState({value: value});
     this.props.onIterationChange(value);
   }
   render() {
     return (
       <div className="iteration-slider">
-        <div>Iteration (of {this.props.max}): {this.state.value}</div>
-        <input type="range" onChange={this.handleChange} min={this.props.min} max={this.props.max} value={this.state.value} step="1"/>
+        <div>Iteration (of {this.props.max}): {this.props.value}</div>
+        <input type="range" onChange={this.handleChange} min={this.props.min} max={this.props.max} value={this.props.value} step="1"/>
       </div>
     );
   }
@@ -319,7 +315,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
         <div className="display-field">
           Final Error: {finalError}
         </div>
-        <IterationSlider min={0} max={this.state.count} startValue={this.state.iteration} onIterationChange={this.handleIterationChange}/>
+        <IterationSlider min={0} max={this.state.count} value={this.state.iteration} onIterationChange={this.handleIterationChange}/>
         <table className="display-table">
           <tr>
             <td>
