@@ -215,6 +215,84 @@ class IterationSlider extends React.Component<IterationSliderProps, IterationSli
   }
 }
 
+function renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2) {
+	let height = 400;
+	let verticalSep = 30;
+	let horizontalSep = 60;
+	let nodeRadius = 10;
+	let x = 30 + nodeRadius;
+
+	let layer1Count = styledWeights1.length;
+	let layer2Count = styledWeights1[0].length;
+	let layer3Count = styledWeights2[0].length;
+
+	let layer1Locs: number[][] = [];
+	let layer2Locs: number[][] = [];
+	let layer3Locs: number[][] = [];
+
+	let totalNodeHeight = nodeRadius * 2 + verticalSep;
+	let totalNodeWidth = nodeRadius * 2 + horizontalSep;
+
+	let layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
+	let layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
+	let layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = 'black';
+	for(let i = 0; i < layer1Count; i++) {
+		ctx.beginPath();
+		ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
+		layer1Locs.push([x, layer1StartY]);
+		layer1StartY += totalNodeHeight;
+		ctx.stroke();
+	}
+	x += totalNodeWidth;
+
+	for(let i = 0; i < layer2Count; i++) {
+		ctx.beginPath();
+		ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
+		layer2Locs.push([x, layer2StartY]);
+		layer2StartY += totalNodeHeight;
+		ctx.stroke();
+	}
+	x += totalNodeWidth;
+
+	for(let i = 0; i < layer3Count; i++) {
+		ctx.beginPath();
+		ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
+		layer3Locs.push([x, layer3StartY]);
+		layer3StartY += totalNodeHeight;
+		ctx.stroke();
+	}
+
+  ctx.lineWidth = 2;
+	for(let i = 0; i < layer1Locs.length; i++) {
+		for(let j = 0; j < layer2Locs.length; j++) {
+			ctx.beginPath();
+			ctx.strokeStyle = styledWeights1[i][j];
+			ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
+			ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+			ctx.stroke();
+		}
+	}
+	for(let i = 0; i < layer2Locs.length; i++) {
+		for(let j = 0; j < layer3Locs.length; j++) {
+			ctx.beginPath();
+			ctx.strokeStyle = styledWeights2[i][j];
+			ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
+			ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+			ctx.stroke();
+		}
+	}
+}
+
+function renderCanvasGraph(styledWeights1, styledWeights2) {
+	let canvas = document.getElementById('canvas-graph') as HTMLCanvasElement;
+  let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 250, 400);
+  renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2);
+}
+
 interface SingleLayerDisplayState {
   networkState: NetworkState;
   iteration: number;
@@ -251,6 +329,7 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
     this.setState({
       iteration: iteration
     });
+    this.renderWeightsToCanvas();
   }
   handleLearningRateChange(event) {
     this.setState({
@@ -277,14 +356,32 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
       hiddenLayerSize: this.state.tempHiddenLayerSize
     });
 
-    newState.plotData.render('error-plot', 'Error');
+    this.nonReactRenders();
   }
-  componentDidMount() {
+  getCurrentLayer1() {
+    return this.state.networkState.iterations[this.state.iteration][0];
+  }
+  getCurrentLayer2() {
+    return this.state.networkState.iterations[this.state.iteration][1];
+  }
+  renderWeightsToCanvas() {
+    let styledWeights1 = MatrixUtil.mapOneToOne(this.getCurrentLayer1().weights, (weight) => weightToStyle(weight)['background-color']);
+    let styledWeights2 = MatrixUtil.mapOneToOne(this.getCurrentLayer2().weights, (weight) => weightToStyle(weight)['background-color']);
+    renderCanvasGraph(styledWeights1, styledWeights2);
+  }
+  nonReactRenders() {
+    this.renderWeightsToCanvas();
     this.state.networkState.plotData.render('error-plot', 'Error');
   }
+  componentDidUpdate() {
+    this.nonReactRenders();
+  }
+  componentDidMount() {
+    this.nonReactRenders();
+  }
   render() {
-    let layer1 = this.state.networkState.iterations[this.state.iteration][0];
-    let layer2 = this.state.networkState.iterations[this.state.iteration][1];
+    let layer1 = this.getCurrentLayer1();
+    let layer2 = this.getCurrentLayer2();
     let finalError = this.state.networkState.finalError;
 
     return (
@@ -412,7 +509,16 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
             </td>
           </tr>
         </table>
-        <div id="error-plot"></div>
+        <table>
+          <tr>
+          <td>
+              <canvas id="canvas-graph" width="250" height="400"></canvas>
+          </td>
+          <td>
+              <div id="error-plot"></div>
+          </td>
+          </tr>
+        </table>
       </div>
     );
   }

@@ -417,6 +417,74 @@ var IterationSlider = (function (_super) {
     };
     return IterationSlider;
 }(React.Component));
+function renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2) {
+    var height = 400;
+    var verticalSep = 30;
+    var horizontalSep = 60;
+    var nodeRadius = 10;
+    var x = 30 + nodeRadius;
+    var layer1Count = styledWeights1.length;
+    var layer2Count = styledWeights1[0].length;
+    var layer3Count = styledWeights2[0].length;
+    var layer1Locs = [];
+    var layer2Locs = [];
+    var layer3Locs = [];
+    var totalNodeHeight = nodeRadius * 2 + verticalSep;
+    var totalNodeWidth = nodeRadius * 2 + horizontalSep;
+    var layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
+    var layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
+    var layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'black';
+    for (var i = 0; i < layer1Count; i++) {
+        ctx.beginPath();
+        ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
+        layer1Locs.push([x, layer1StartY]);
+        layer1StartY += totalNodeHeight;
+        ctx.stroke();
+    }
+    x += totalNodeWidth;
+    for (var i = 0; i < layer2Count; i++) {
+        ctx.beginPath();
+        ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
+        layer2Locs.push([x, layer2StartY]);
+        layer2StartY += totalNodeHeight;
+        ctx.stroke();
+    }
+    x += totalNodeWidth;
+    for (var i = 0; i < layer3Count; i++) {
+        ctx.beginPath();
+        ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
+        layer3Locs.push([x, layer3StartY]);
+        layer3StartY += totalNodeHeight;
+        ctx.stroke();
+    }
+    ctx.lineWidth = 2;
+    for (var i = 0; i < layer1Locs.length; i++) {
+        for (var j = 0; j < layer2Locs.length; j++) {
+            ctx.beginPath();
+            ctx.strokeStyle = styledWeights1[i][j];
+            ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
+            ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+            ctx.stroke();
+        }
+    }
+    for (var i = 0; i < layer2Locs.length; i++) {
+        for (var j = 0; j < layer3Locs.length; j++) {
+            ctx.beginPath();
+            ctx.strokeStyle = styledWeights2[i][j];
+            ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
+            ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+            ctx.stroke();
+        }
+    }
+}
+function renderCanvasGraph(styledWeights1, styledWeights2) {
+    var canvas = document.getElementById('canvas-graph');
+    var ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, 250, 400);
+    renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2);
+}
 var SingleLayerDisplay = (function (_super) {
     __extends(SingleLayerDisplay, _super);
     function SingleLayerDisplay(props) {
@@ -445,6 +513,7 @@ var SingleLayerDisplay = (function (_super) {
         this.setState({
             iteration: iteration
         });
+        this.renderWeightsToCanvas();
     };
     SingleLayerDisplay.prototype.handleLearningRateChange = function (event) {
         this.setState({
@@ -470,14 +539,32 @@ var SingleLayerDisplay = (function (_super) {
             networkState: newState,
             hiddenLayerSize: this.state.tempHiddenLayerSize
         });
-        newState.plotData.render('error-plot', 'Error');
+        this.nonReactRenders();
     };
-    SingleLayerDisplay.prototype.componentDidMount = function () {
+    SingleLayerDisplay.prototype.getCurrentLayer1 = function () {
+        return this.state.networkState.iterations[this.state.iteration][0];
+    };
+    SingleLayerDisplay.prototype.getCurrentLayer2 = function () {
+        return this.state.networkState.iterations[this.state.iteration][1];
+    };
+    SingleLayerDisplay.prototype.renderWeightsToCanvas = function () {
+        var styledWeights1 = MatrixUtil.mapOneToOne(this.getCurrentLayer1().weights, function (weight) { return weightToStyle(weight)['background-color']; });
+        var styledWeights2 = MatrixUtil.mapOneToOne(this.getCurrentLayer2().weights, function (weight) { return weightToStyle(weight)['background-color']; });
+        renderCanvasGraph(styledWeights1, styledWeights2);
+    };
+    SingleLayerDisplay.prototype.nonReactRenders = function () {
+        this.renderWeightsToCanvas();
         this.state.networkState.plotData.render('error-plot', 'Error');
     };
+    SingleLayerDisplay.prototype.componentDidUpdate = function () {
+        this.nonReactRenders();
+    };
+    SingleLayerDisplay.prototype.componentDidMount = function () {
+        this.nonReactRenders();
+    };
     SingleLayerDisplay.prototype.render = function () {
-        var layer1 = this.state.networkState.iterations[this.state.iteration][0];
-        var layer2 = this.state.networkState.iterations[this.state.iteration][1];
+        var layer1 = this.getCurrentLayer1();
+        var layer2 = this.getCurrentLayer2();
         var finalError = this.state.networkState.finalError;
         return (React.createElement("div", null,
             React.createElement("div", { className: "input-section" },
@@ -571,7 +658,12 @@ var SingleLayerDisplay = (function (_super) {
                     React.createElement("td", null,
                         React.createElement("div", { className: "matrix-header" }, "Weight Updates"),
                         matrixToTable(layer1.weightUpdates, false)))),
-            React.createElement("div", { id: "error-plot" })));
+            React.createElement("table", null,
+                React.createElement("tr", null,
+                    React.createElement("td", null,
+                        React.createElement("canvas", { id: "canvas-graph", width: "250", height: "400" })),
+                    React.createElement("td", null,
+                        React.createElement("div", { id: "error-plot" }))))));
     };
     return SingleLayerDisplay;
 }(React.Component));
