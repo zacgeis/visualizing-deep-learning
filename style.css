@@ -10,7 +10,7 @@ body {
 }
 
 .intro {
-  padding: 30px 0px;
+  padding: 20px 0px;
 }
 
 .input-section {
@@ -38,18 +38,46 @@ body {
 }
 
 .display-table td {
-  padding-right: 30px;
-  padding-bottom: 20px;
+  padding: 0px 10px 20px 10px;
+  text-align: -webkit-center;
   font-size: 14px;
+}
+
+.display-table .symbol {
+  padding: 0px;
+  font-size: 50px;
+  letter-spacing: -5px;
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.section-header {
+  font-size: 20px;
+  padding-bottom: 20px;
 }
 
 .matrix-header {
   text-align: center;
   padding-bottom: 10px;
+  font-size: 14px;
 }
 
 .matrix-table td {
   padding: 0px 10px;
   border: 1px solid rgba(0,0,0,.4);
   text-align: center;
+  font-size: 12px;
+}
+
+.math-intro .display-table td {
+  padding: 5px;
+}
+
+.section {
+  float: left;
+}
+
+.name {
+  margin-left: 15px;
+  margin-top: 4px;
+  font-style: italic;
 }

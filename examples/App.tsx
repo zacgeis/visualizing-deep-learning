@@ -6,34 +6,35 @@ import * as Plotly from "plotly.js";
 
 type Matrix<T> = Array<Array<T>>;
 
-function weightToStyle(weight: number) {
-  let alpha = (Math.min(100, Math.abs(weight * 25)) / 100).toString().substr(0, 4);
-  if(weight < 0) {
-    return {
-      'background-color': 'rgba(0, 255, 255, ' + alpha + ')'
-    }
-  }
-  return {
-    'background-color': 'rgba(255, 150, 0, ' + alpha + ')'
-  }
+interface MatrixTableProps {
+  matrix: Matrix<any>;
+  colorize: boolean;
+  fullString?: boolean;
 }
-
-function matrixToTable(m: Matrix<number>, colorize: boolean): JSX.Element {
-  let rowComponents: JSX.Element[] = [];
-  let [mRows, mCols] = MatrixUtil.getDimension(m);
-  for(let row = 0; row < mRows; row++) {
-    let colComponents: JSX.Element[] = [];
-    for(let col = 0; col < mCols; col++) {
-      let value = m[row][col].toString().substr(0, 8);
-      let style = {};
-      if(colorize) {
-        style = weightToStyle(m[row][col]);
-      }
-      colComponents.push(<td style={style}>{value}</td>);
-    }
-    rowComponents.push(<tr>{colComponents}</tr>);
+class MatrixTable extends React.Component<MatrixTableProps, {}> {
+  constructor(props) {
+    super(props);
   }
-  return (<table className="matrix-table">{rowComponents}</table>);
+  render() {
+    let rowComponents: JSX.Element[] = [];
+    let [mRows, mCols] = MatrixUtil.getDimension(this.props.matrix);
+    for(let row = 0; row < mRows; row++) {
+      let colComponents: JSX.Element[] = [];
+      for(let col = 0; col < mCols; col++) {
+        let value = this.props.matrix[row][col]
+        if(!this.props.fullString) {
+          value = value.toString().substr(0, 8);
+        }
+        let style = {};
+        if(this.props.colorize) {
+          style['background-color'] = MatrixUtil.weightToColor(this.props.matrix[row][col]);
+        }
+        colComponents.push(<td style={style}>{value}</td>);
+      }
+      rowComponents.push(<tr>{colComponents}</tr>);
+    }
+    return (<table className="matrix-table">{rowComponents}</table>);
+  }
 }
 
 interface IterationState {
@@ -46,6 +47,41 @@ interface IterationState {
   weightUpdates: Matrix<number>;
 }
 
+interface PlotlyGraphProps {
+  plotData: PlotData;
+  width: number;
+  height: number;
+  title: string;
+}
+class PlotlyGraph extends React.Component<PlotlyGraphProps, {}> {
+  graphDiv: HTMLElement;
+  constructor(props) {
+    super(props);
+  }
+  componentDidUpdate() {
+    this.plotlyRender();
+  }
+  componentDidMount() {
+    this.plotlyRender();
+  }
+  render() {
+    return <div ref={(input) => { this.graphDiv = input }}></div>
+  }
+  plotlyRender() {
+    Plotly.purge(this.graphDiv);
+    let layout = {
+      width: this.props.width,
+      height: this.props.height,
+      title: this.props.title,
+      xaxis: {
+        title: 'Iterations'
+      }
+    };
+
+    let data = this.props.plotData.getPlotlyFormattedData();
+    Plotly.newPlot(this.graphDiv, data, layout);
+  }
+}
 class PlotData {
   index: number;
   iteration: number[];
@@ -83,20 +119,6 @@ class PlotData {
     }
     return data;
   }
-  render(div: string, title: string) {
-    Plotly.purge(div);
-    let layout = {
-      width: 480,
-      height: 400,
-      title: title,
-      xaxis: {
-        title: 'Iterations'
-      }
-    };
-
-    let data = this.getPlotlyFormattedData();
-    Plotly.newPlot(div, data, layout);
-  }
 }
 
 interface NetworkState {
@@ -107,7 +129,6 @@ interface NetworkState {
   plotData: PlotData;
   finalError: number;
 }
-
 
 function generateNetworkState(count: number, learningRate: number, hiddenLayerSize: number): NetworkState {
   let inputData = [
@@ -215,83 +236,239 @@ class IterationSlider extends React.Component<IterationSliderProps, IterationSli
   }
 }
 
-function renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2) {
-  let height = 400;
-  let verticalSep = 30;
-  let horizontalSep = 60;
-  let nodeRadius = 10;
-  let x = 30 + nodeRadius;
-
-  let layer1Count = styledWeights1.length;
-  let layer2Count = styledWeights1[0].length;
-  let layer3Count = styledWeights2[0].length;
-
-  let layer1Locs: number[][] = [];
-  let layer2Locs: number[][] = [];
-  let layer3Locs: number[][] = [];
-
-  let totalNodeHeight = nodeRadius * 2 + verticalSep;
-  let totalNodeWidth = nodeRadius * 2 + horizontalSep;
-
-  let layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
-  let layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
-  let layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
-
-  ctx.lineWidth = 1;
-  ctx.strokeStyle = 'black';
-  for(let i = 0; i < layer1Count; i++) {
-    ctx.beginPath();
-    ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
-    layer1Locs.push([x, layer1StartY]);
-    layer1StartY += totalNodeHeight;
-    ctx.stroke();
+interface MathIntroState { value: number; }
+class MathIntro extends React.Component<{}, {}> {
+  sigmoidElement: HTMLElement;
+  sigmoidDerivElement: HTMLElement;
+  constructor(props) {
+    super(props);
   }
-  x += totalNodeWidth;
-
-  for(let i = 0; i < layer2Count; i++) {
-    ctx.beginPath();
-    ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
-    layer2Locs.push([x, layer2StartY]);
-    layer2StartY += totalNodeHeight;
-    ctx.stroke();
+  componentDidUpdate() {
+    this.renderLatex();
   }
-  x += totalNodeWidth;
-
-  for(let i = 0; i < layer3Count; i++) {
-    ctx.beginPath();
-    ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
-    layer3Locs.push([x, layer3StartY]);
-    layer3StartY += totalNodeHeight;
-    ctx.stroke();
+  componentDidMount() {
+    this.renderLatex();
   }
-
-  ctx.lineWidth = 2;
-  for(let i = 0; i < layer1Locs.length; i++) {
-    for(let j = 0; j < layer2Locs.length; j++) {
-      ctx.beginPath();
-      ctx.strokeStyle = styledWeights1[i][j];
-      ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
-      ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
-      ctx.stroke();
-    }
+  renderLatex() {
+    katex.render("s(x) = \\frac{1}{1 + e^{-x}}", this.sigmoidElement);
+    katex.render("s'(x) = \\frac{ds(x)}{dx} = s(x)(1 - s(x))", this.sigmoidDerivElement);
   }
-  for(let i = 0; i < layer2Locs.length; i++) {
-    for(let j = 0; j < layer3Locs.length; j++) {
-      ctx.beginPath();
-      ctx.strokeStyle = styledWeights2[i][j];
-      ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
-      ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
-      ctx.stroke();
-    }
+  render() {
+    let x22 = [['x11', 'x12'], ['x21', 'x22']];
+    let y22 = [['y11', 'y12'], ['y21', 'y22']];
+    let plus = [['x11 + y11', 'x12 + y12'], ['x21 + y21', 'x22 + y22']];
+    let adot = [['a*x11', 'a*x12'], ['a*x21', 'a*x22']];
+    let fx = [['f(x11)', 'f(x12)'], ['f(x21)', 'f(x22)']];
+
+    let x23 = [['x11', 'x12', 'x13'], ['x21', 'x22', 'x23']];
+    let transpose = [['x11', '21'], ['x12', '22'], ['x21', '23']];
+    let y32 = [['y11', 'y12'], ['y21', 'y22'], ['y31', 'y32']];
+    let xydot = [
+      [
+        'x11*y11 + x12*y21 + x13*y31',
+        'x11*y12 + x12*y22 + x13*y32',
+      ],
+      [
+        'x21*y11 + x22*y21 + x23*y31',
+        'x21*y12 + x22*y22 + x23*y32',
+      ]
+    ];
+    return (
+      <div className="math-intro">
+        <div className="math-intro-header">Brief Function Guide:</div>
+        <div className="math" ref={(input) => { this.sigmoidElement = input }}></div>
+        <div className="math" ref={(input) => { this.sigmoidDerivElement = input }}></div>
+        <table className="display-table">
+          <tr>
+            <td>
+              <MatrixTable matrix={x22} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              +
+            </td>
+            <td>
+              <MatrixTable matrix={y22} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              =
+            </td>
+            <td>
+              <MatrixTable matrix={plus} colorize={false} fullString={true}/>
+            </td>
+          </tr>
+        </table>
+        <table className="display-table">
+          <tr>
+            <td>
+              <MatrixTable matrix={x23} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              ·
+            </td>
+            <td>
+              <MatrixTable matrix={y32} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              =
+            </td>
+            <td>
+              <MatrixTable matrix={xydot} colorize={false} fullString={true}/>
+            </td>
+          </tr>
+        </table>
+        <table className="display-table">
+          <tr>
+            <td>
+              a
+            </td>
+            <td className="symbol">
+              ·
+            </td>
+            <td>
+              <MatrixTable matrix={x22} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              =
+            </td>
+            <td>
+              <MatrixTable matrix={adot} colorize={false} fullString={true}/>
+            </td>
+          </tr>
+        </table>
+        <table className="display-table">
+          <tr>
+            <td className="symbol">
+              T(
+            </td>
+            <td>
+              <MatrixTable matrix={x23} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              )=
+            </td>
+            <td>
+              <MatrixTable matrix={transpose} colorize={false} fullString={true}/>
+            </td>
+          </tr>
+        </table>
+        <table className="display-table">
+          <tr>
+            <td className="symbol">
+              f(
+            </td>
+            <td>
+              <MatrixTable matrix={x22} colorize={false} fullString={true}/>
+            </td>
+            <td className="symbol">
+              )=
+            </td>
+            <td>
+              <MatrixTable matrix={fx} colorize={false} fullString={true}/>
+            </td>
+          </tr>
+        </table>
+      </div>
+    );
   }
 }
 
-function renderCanvasGraph(styledWeights1, styledWeights2) {
-  let canvas = document.getElementById('canvas-graph') as HTMLCanvasElement;
-  let ctx: CanvasRenderingContext2D = canvas.getContext('2d');
-  ctx.clearRect(0, 0, 250, 400);
-  renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2);
+interface NetworkGraphProps {
+  styledWeights1: Matrix<string>;
+  styledWeights2: Matrix<string>;
+  height: number;
+  width: number;
 }
+class NetworkGraph extends React.Component<NetworkGraphProps, {}> {
+  canvasElement: HTMLCanvasElement;
+  constructor(props) {
+    super(props);
+  }
+  componentDidUpdate() {
+    this.renderCanvasGraph();
+  }
+  componentDidMount() {
+    this.renderCanvasGraph();
+  }
+  renderCanvasGraph() {
+    let ctx: CanvasRenderingContext2D = this.canvasElement.getContext('2d');
+    ctx.clearRect(0, 0, 250, 400);
+
+    let styledWeights1 = this.props.styledWeights1;
+    let styledWeights2 = this.props.styledWeights2;
+    let height = this.props.height;
+    let verticalSep = 30;
+    let horizontalSep = 60;
+    let nodeRadius = 10;
+
+    let layer1Count = styledWeights1.length;
+    let layer2Count = styledWeights1[0].length;
+    let layer3Count = styledWeights2[0].length;
+
+    let layer1Locs: number[][] = [];
+    let layer2Locs: number[][] = [];
+    let layer3Locs: number[][] = [];
+
+    let totalNodeHeight = nodeRadius * 2 + verticalSep;
+    let totalNodeWidth = nodeRadius * 2 + horizontalSep;
+
+    let x = (this.props.width / 2) - ((totalNodeWidth * (3 - 1)) / 2);
+    let layer1StartY = (height / 2) - ((totalNodeHeight * (layer1Count - 1)) / 2);
+    let layer2StartY = (height / 2) - ((totalNodeHeight * (layer2Count - 1)) / 2);
+    let layer3StartY = (height / 2) - ((totalNodeHeight * (layer3Count - 1)) / 2);
+
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = 'rgba(0, 0 , 0, 1)';
+    for(let i = 0; i < layer1Count; i++) {
+      ctx.beginPath();
+      ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
+      layer1Locs.push([x, layer1StartY]);
+      layer1StartY += totalNodeHeight;
+      ctx.stroke();
+    }
+    x += totalNodeWidth;
+
+    for(let i = 0; i < layer2Count; i++) {
+      ctx.beginPath();
+      ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
+      layer2Locs.push([x, layer2StartY]);
+      layer2StartY += totalNodeHeight;
+      ctx.stroke();
+    }
+    x += totalNodeWidth;
+
+    for(let i = 0; i < layer3Count; i++) {
+      ctx.beginPath();
+      ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
+      layer3Locs.push([x, layer3StartY]);
+      layer3StartY += totalNodeHeight;
+      ctx.stroke();
+    }
+
+    ctx.lineWidth = 2;
+    for(let i = 0; i < layer1Locs.length; i++) {
+      for(let j = 0; j < layer2Locs.length; j++) {
+        ctx.beginPath();
+        ctx.strokeStyle = styledWeights1[i][j];
+        ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
+        ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+        ctx.stroke();
+      }
+    }
+    for(let i = 0; i < layer2Locs.length; i++) {
+      for(let j = 0; j < layer3Locs.length; j++) {
+        ctx.beginPath();
+        ctx.strokeStyle = styledWeights2[i][j];
+        ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
+        ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+        ctx.stroke();
+      }
+    }
+  }
+  render() {
+    return <canvas ref={(input) => { this.canvasElement = input }} width={this.props.width} height={this.props.height}></canvas>;
+  }
+}
+
 
 interface SingleLayerDisplayState {
   networkState: NetworkState;
@@ -329,7 +506,6 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
     this.setState({
       iteration: iteration
     });
-    this.renderWeightsToCanvas();
   }
   handleLearningRateChange(event) {
     this.setState({
@@ -355,37 +531,18 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
       networkState: newState,
       hiddenLayerSize: this.state.tempHiddenLayerSize
     });
-
-    this.nonReactRenders();
-  }
-  getCurrentLayer1() {
-    return this.state.networkState.iterations[this.state.iteration][0];
-  }
-  getCurrentLayer2() {
-    return this.state.networkState.iterations[this.state.iteration][1];
-  }
-  renderWeightsToCanvas() {
-    let styledWeights1 = MatrixUtil.mapOneToOne(this.getCurrentLayer1().weights, (weight) => weightToStyle(weight)['background-color']);
-    let styledWeights2 = MatrixUtil.mapOneToOne(this.getCurrentLayer2().weights, (weight) => weightToStyle(weight)['background-color']);
-    renderCanvasGraph(styledWeights1, styledWeights2);
-  }
-  nonReactRenders() {
-    this.renderWeightsToCanvas();
-    this.state.networkState.plotData.render('error-plot', 'Error');
-  }
-  componentDidUpdate() {
-    this.nonReactRenders();
-  }
-  componentDidMount() {
-    this.nonReactRenders();
   }
   render() {
-    let layer1 = this.getCurrentLayer1();
-    let layer2 = this.getCurrentLayer2();
+    let layer1 = this.state.networkState.iterations[this.state.iteration][0];
+    let layer2 = this.state.networkState.iterations[this.state.iteration][1];
     let finalError = this.state.networkState.finalError;
+    let plotData = this.state.networkState.plotData;
+    let styledWeights1 = MatrixUtil.mapOneToOne(layer1.weights, (weight) => MatrixUtil.weightToColor(weight));
+    let styledWeights2 = MatrixUtil.mapOneToOne(layer2.weights, (weight) => MatrixUtil.weightToColor(weight));
 
     return (
       <div>
+        <MathIntro/>
         <div className="input-section">
           <div className="input-field">
             Hidden Layer Size: <input value={this.state.tempHiddenLayerSize} onInput={this.handleHiddenLayerSizeChange} />
@@ -400,125 +557,333 @@ class SingleLayerDisplay extends React.Component<{}, SingleLayerDisplayState> {
             Generate
           </button>
         </div>
-        <div className="display-field">
-          Hidden Layer Size: {this.state.hiddenLayerSize}
-        </div>
-        <div className="display-field">
-          Learning Rate: {this.state.learningRate}
-        </div>
-        <div className="display-field">
-          Iteration Count: {this.state.count}
-        </div>
-        <div className="display-field">
-          Final Error: {finalError}
-        </div>
-        <IterationSlider min={0} max={this.state.count} value={this.state.iteration} onIterationChange={this.handleIterationChange}/>
-        <table className="display-table">
-          <tr>
-            <td>
-              <div className="matrix-header">Forward Layer 1</div>
-            </td>
-            <td>
-              <div className="matrix-header">Inputs</div>
-              {matrixToTable(this.state.networkState.inputData, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Weights</div>
-              {matrixToTable(layer1.weights, true)}
-            </td>
-            <td>
-              <div className="matrix-header">Weighted Sum</div>
-              {matrixToTable(layer1.hiddenSum, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Output</div>
-              {matrixToTable(layer1.hiddenResult, false)}
-            </td>
-          </tr>
-        </table>
-        <table className="display-table">
-          <tr>
-            <td>
-              <div className="matrix-header">Forward Layer 2</div>
-            </td>
-            <td>
-              <div className="matrix-header">Inputs (Layer 1 Output)</div>
-              {matrixToTable(layer1.hiddenResult,false)}
-            </td>
-            <td>
-              <div className="matrix-header">Weights</div>
-              {matrixToTable(layer2.weights, true)}
-            </td>
-            <td>
-              <div className="matrix-header">Weighted Sum</div>
-              {matrixToTable(layer2.hiddenSum, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Output</div>
-              {matrixToTable(layer2.hiddenResult, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Target Output</div>
-              {matrixToTable(this.state.networkState.outputTarget, false)}
-            </td>
-          </tr>
-        </table>
-        <table className="display-table">
-          <tr>
-            <td>
-              <div className="matrix-header">Back Prop Layer 2</div>
-            </td>
-            <td>
-              <div className="matrix-header">Error</div>
-              {matrixToTable(layer2.error, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Gradients</div>
-              {matrixToTable(layer2.gradients, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Delta</div>
-              {matrixToTable(layer2.delta, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Weight Updates</div>
-              {matrixToTable(layer2.weightUpdates, false)}
-            </td>
-          </tr>
-        </table>
-        <table className="display-table">
-          <tr>
-            <td>
-              <div className="matrix-header">Back Prop Layer 1</div>
-            </td>
-            <td>
-              <div className="matrix-header">Error</div>
-              {matrixToTable(layer1.error, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Gradients</div>
-              {matrixToTable(layer1.gradients, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Delta</div>
-              {matrixToTable(layer1.delta, false)}
-            </td>
-            <td>
-              <div className="matrix-header">Weight Updates</div>
-              {matrixToTable(layer1.weightUpdates, false)}
-            </td>
-          </tr>
-        </table>
         <table>
           <tr>
             <td>
-              <canvas id="canvas-graph" width="250" height="400"></canvas>
+              <div className="display-field">
+                Hidden Layer Size: {this.state.hiddenLayerSize}
+              </div>
+              <div className="display-field">
+                Learning Rate: {this.state.learningRate}
+              </div>
+              <div className="display-field">
+                Iteration Count: {this.state.count}
+              </div>
+              <div className="display-field">
+                Final Error: {finalError}
+              </div>
+              <IterationSlider min={0} max={this.state.count} value={this.state.iteration} onIterationChange={this.handleIterationChange}/>
             </td>
             <td>
-              <div id="error-plot"></div>
+              <NetworkGraph styledWeights1={styledWeights1} styledWeights2={styledWeights2} height={300} width={300}/>
+            </td>
+            <td>
+              <PlotlyGraph plotData={plotData} title="Error" height={300} width={400}/>
             </td>
           </tr>
         </table>
+        <div className="section">
+          <div className="section-header">Forward Pass: </div>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Weighted Sum</div>
+                <MatrixTable matrix={layer1.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">Inputs</div>
+                <MatrixTable matrix={this.state.networkState.inputData} colorize={false}/>
+              </td>
+              <td className="symbol">
+                ·
+              </td>
+              <td>
+                <div className="matrix-header">L1 Weights</div>
+                <MatrixTable matrix={layer1.weights} colorize={true}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Output</div>
+                <MatrixTable matrix={layer1.hiddenResult} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = S(
+              </td>
+              <td>
+                <div className="matrix-header">L1 Weighted Sum</div>
+                <MatrixTable matrix={layer1.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Weighted Sum</div>
+                <MatrixTable matrix={layer2.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">Inputs (L1 Output)</div>
+                <MatrixTable matrix={layer1.hiddenResult} colorize={false}/>
+              </td>
+              <td className="symbol">
+                ·
+              </td>
+              <td>
+                <div className="matrix-header">L2 Weights</div>
+                <MatrixTable matrix={layer2.weights} colorize={true}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Output (Final Result)</div>
+                <MatrixTable matrix={layer2.hiddenResult} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = S(
+              </td>
+              <td>
+                <div className="matrix-header">L2 Weighted Sum</div>
+                <MatrixTable matrix={layer2.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
+              </td>
+            </tr>
+          </table>
+          <div className="section-header">Output: </div>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Error</div>
+                <MatrixTable matrix={layer2.error} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">Target Output</div>
+                <MatrixTable matrix={this.state.networkState.outputTarget} colorize={false}/>
+              </td>
+              <td className="symbol">
+                -
+              </td>
+              <td>
+                <div className="matrix-header">L2 Output</div>
+                <MatrixTable matrix={layer2.hiddenResult} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+        </div>
+        <div className="section">
+          <div className="section-header">Back Propagation Pass: </div>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Gradients</div>
+                <MatrixTable matrix={layer2.gradients} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = S'(
+              </td>
+              <td>
+                <div className="matrix-header">L2 Weighted Sum</div>
+                <MatrixTable matrix={layer2.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Delta</div>
+                <MatrixTable matrix={layer2.delta} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">L2 Gradients</div>
+                <MatrixTable matrix={layer2.gradients} colorize={false}/>
+              </td>
+              <td className="symbol">
+                x
+              </td>
+              <td>
+                <div className="matrix-header">L2 Error</div>
+                <MatrixTable matrix={layer2.error} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Error</div>
+                <MatrixTable matrix={layer1.error} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">L2 Delta</div>
+                <MatrixTable matrix={layer2.delta} colorize={false}/>
+              </td>
+              <td className="symbol">
+                ·T(
+              </td>
+              <td>
+                <div className="matrix-header">L2 Weights</div>
+                <MatrixTable matrix={layer2.weights} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Gradients</div>
+                <MatrixTable matrix={layer1.gradients} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = S'(
+              </td>
+              <td>
+                <div className="matrix-header">L1 Hidden Sum</div>
+                <MatrixTable matrix={layer1.hiddenSum} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Delta</div>
+                <MatrixTable matrix={layer1.delta} colorize={false}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">L1 Gradients</div>
+                <MatrixTable matrix={layer1.gradients} colorize={false}/>
+              </td>
+              <td className="symbol">
+                x
+              </td>
+              <td>
+                <div className="matrix-header">L1 Error</div>
+                <MatrixTable matrix={layer1.error} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L1 Weight Updates</div>
+                <MatrixTable matrix={layer1.weightUpdates} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = {this.state.learningRate} · T(
+              </td>
+              <td>
+                <div className="matrix-header">Inputs</div>
+                <MatrixTable matrix={this.state.networkState.inputData} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )·
+              </td>
+              <td>
+                <div className="matrix-header">L1 Delta</div>
+                <MatrixTable matrix={layer1.delta} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">L2 Weight Updates</div>
+                <MatrixTable matrix={layer2.weightUpdates} colorize={false}/>
+              </td>
+              <td className="symbol">
+                = {this.state.learningRate} · T(
+              </td>
+              <td>
+                <div className="matrix-header">L1 Output</div>
+                <MatrixTable matrix={layer1.hiddenResult} colorize={false}/>
+              </td>
+              <td className="symbol">
+                )·
+              </td>
+              <td>
+                <div className="matrix-header">L2 Delta</div>
+                <MatrixTable matrix={layer2.delta} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">New L1 Weights</div>
+                <MatrixTable matrix={MatrixUtil.elementAdd(layer1.weightUpdates, layer1.weights)} colorize={true}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">L1 Delta</div>
+                <MatrixTable matrix={layer1.weights} colorize={true}/>
+              </td>
+              <td className="symbol">
+                +
+              </td>
+              <td>
+                <div className="matrix-header">L1 Weight Updates</div>
+                <MatrixTable matrix={layer1.weightUpdates} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+          <table className="display-table">
+            <tr>
+              <td>
+                <div className="matrix-header">New L2 Weights</div>
+                <MatrixTable matrix={MatrixUtil.elementAdd(layer2.weightUpdates, layer2.weights)} colorize={true}/>
+              </td>
+              <td className="symbol">
+                =
+              </td>
+              <td>
+                <div className="matrix-header">L2 Delta</div>
+                <MatrixTable matrix={layer2.weights} colorize={true}/>
+              </td>
+              <td className="symbol">
+                +
+              </td>
+              <td>
+                <div className="matrix-header">L2 Weight Updates</div>
+                <MatrixTable matrix={layer2.weightUpdates} colorize={false}/>
+              </td>
+            </tr>
+          </table>
+        </div>
       </div>
     );
   }

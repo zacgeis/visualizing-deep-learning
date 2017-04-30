@@ -137,3 +137,11 @@ function display(name, m) {
     process.stdout.write(cap + '\n\n');
 }
 exports.display = display;
+function weightToColor(weight) {
+    var alpha = (Math.min(100, Math.abs(weight * 25)) / 100).toString().substr(0, 4);
+    if (weight < 0) {
+        return 'rgba(0, 255, 255, ' + alpha + ')';
+    }
+    return 'rgba(255, 150, 0, ' + alpha + ')';
+}
+exports.weightToColor = weightToColor;

@@ -208,3 +208,11 @@ export function display<T>(name: string, m: Matrix<T>): void {
   }
   process.stdout.write(cap + '\n\n');
 }
+
+export function weightToColor(weight: number) {
+  let alpha = (Math.min(100, Math.abs(weight * 25)) / 100).toString().substr(0, 4);
+  if(weight < 0) {
+      return 'rgba(0, 255, 255, ' + alpha + ')';
+  }
+  return 'rgba(255, 150, 0, ' + alpha + ')';
+}

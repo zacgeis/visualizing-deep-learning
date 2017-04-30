@@ -13,35 +13,65 @@ Object.defineProperty(exports, "__esModule", { value: true });
 var React = require("react");
 var ReactDOM = require("react-dom");
 var MatrixUtil = require("../lib/MatrixUtil");
+var katex = require("katex");
 var Plotly = require("plotly.js");
-function weightToStyle(weight) {
-    var alpha = (Math.min(100, Math.abs(weight * 25)) / 100).toString().substr(0, 4);
-    if (weight < 0) {
-        return {
-            'background-color': 'rgba(0, 255, 255, ' + alpha + ')'
-        };
+var MatrixTable = (function (_super) {
+    __extends(MatrixTable, _super);
+    function MatrixTable(props) {
+        return _super.call(this, props) || this;
     }
-    return {
-        'background-color': 'rgba(255, 150, 0, ' + alpha + ')'
-    };
-}
-function matrixToTable(m, colorize) {
-    var rowComponents = [];
-    var _a = MatrixUtil.getDimension(m), mRows = _a[0], mCols = _a[1];
-    for (var row = 0; row < mRows; row++) {
-        var colComponents = [];
-        for (var col = 0; col < mCols; col++) {
-            var value = m[row][col].toString().substr(0, 8);
-            var style = {};
-            if (colorize) {
-                style = weightToStyle(m[row][col]);
+    MatrixTable.prototype.render = function () {
+        var rowComponents = [];
+        var _a = MatrixUtil.getDimension(this.props.matrix), mRows = _a[0], mCols = _a[1];
+        for (var row = 0; row < mRows; row++) {
+            var colComponents = [];
+            for (var col = 0; col < mCols; col++) {
+                var value = this.props.matrix[row][col];
+                if (!this.props.fullString) {
+                    value = value.toString().substr(0, 8);
+                }
+                var style = {};
+                if (this.props.colorize) {
+                    style['background-color'] = MatrixUtil.weightToColor(this.props.matrix[row][col]);
+                }
+                colComponents.push(React.createElement("td", { style: style }, value));
             }
-            colComponents.push(React.createElement("td", { style: style }, value));
+            rowComponents.push(React.createElement("tr", null, colComponents));
         }
-        rowComponents.push(React.createElement("tr", null, colComponents));
+        return (React.createElement("table", { className: "matrix-table" }, rowComponents));
+    };
+    return MatrixTable;
+}(React.Component));
+var PlotlyGraph = (function (_super) {
+    __extends(PlotlyGraph, _super);
+    function PlotlyGraph(props) {
+        return _super.call(this, props) || this;
     }
-    return (React.createElement("table", { className: "matrix-table" }, rowComponents));
-}
+    PlotlyGraph.prototype.componentDidUpdate = function () {
+        this.plotlyRender();
+    };
+    PlotlyGraph.prototype.componentDidMount = function () {
+        this.plotlyRender();
+    };
+    PlotlyGraph.prototype.render = function () {
+        var _this = this;
+        return React.createElement("div", { ref: function (input) { _this.graphDiv = input; } });
+    };
+    PlotlyGraph.prototype.plotlyRender = function () {
+        Plotly.purge(this.graphDiv);
+        var layout = {
+            width: this.props.width,
+            height: this.props.height,
+            title: this.props.title,
+            xaxis: {
+                title: 'Iterations'
+            }
+        };
+        var data = this.props.plotData.getPlotlyFormattedData();
+        Plotly.newPlot(this.graphDiv, data, layout);
+    };
+    return PlotlyGraph;
+}(React.Component));
 var PlotData = (function () {
     function PlotData() {
         this.index = 0;
@@ -74,19 +104,6 @@ var PlotData = (function () {
             data.push(this.getSingleTrace(name_2, this.traces[name_2]));
         }
         return data;
-    };
-    PlotData.prototype.render = function (div, title) {
-        Plotly.purge(div);
-        var layout = {
-            width: 480,
-            height: 400,
-            title: title,
-            xaxis: {
-                title: 'Iterations'
-            }
-        };
-        var data = this.getPlotlyFormattedData();
-        Plotly.newPlot(div, data, layout);
     };
     return PlotData;
 }());
@@ -179,74 +196,176 @@ var IterationSlider = (function (_super) {
     };
     return IterationSlider;
 }(React.Component));
-function renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2) {
-    var height = 400;
-    var verticalSep = 30;
-    var horizontalSep = 60;
-    var nodeRadius = 10;
-    var x = 30 + nodeRadius;
-    var layer1Count = styledWeights1.length;
-    var layer2Count = styledWeights1[0].length;
-    var layer3Count = styledWeights2[0].length;
-    var layer1Locs = [];
-    var layer2Locs = [];
-    var layer3Locs = [];
-    var totalNodeHeight = nodeRadius * 2 + verticalSep;
-    var totalNodeWidth = nodeRadius * 2 + horizontalSep;
-    var layer1StartY = (height / 2) - ((totalNodeHeight * layer1Count) / 2);
-    var layer2StartY = (height / 2) - ((totalNodeHeight * layer2Count) / 2);
-    var layer3StartY = (height / 2) - ((totalNodeHeight * layer3Count) / 2);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = 'black';
-    for (var i = 0; i < layer1Count; i++) {
-        ctx.beginPath();
-        ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
-        layer1Locs.push([x, layer1StartY]);
-        layer1StartY += totalNodeHeight;
-        ctx.stroke();
+var MathIntro = (function (_super) {
+    __extends(MathIntro, _super);
+    function MathIntro(props) {
+        return _super.call(this, props) || this;
     }
-    x += totalNodeWidth;
-    for (var i = 0; i < layer2Count; i++) {
-        ctx.beginPath();
-        ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
-        layer2Locs.push([x, layer2StartY]);
-        layer2StartY += totalNodeHeight;
-        ctx.stroke();
+    MathIntro.prototype.componentDidUpdate = function () {
+        this.renderLatex();
+    };
+    MathIntro.prototype.componentDidMount = function () {
+        this.renderLatex();
+    };
+    MathIntro.prototype.renderLatex = function () {
+        katex.render("s(x) = \\frac{1}{1 + e^{-x}}", this.sigmoidElement);
+        katex.render("s'(x) = \\frac{ds(x)}{dx} = s(x)(1 - s(x))", this.sigmoidDerivElement);
+    };
+    MathIntro.prototype.render = function () {
+        var _this = this;
+        var x22 = [['x11', 'x12'], ['x21', 'x22']];
+        var y22 = [['y11', 'y12'], ['y21', 'y22']];
+        var plus = [['x11 + y11', 'x12 + y12'], ['x21 + y21', 'x22 + y22']];
+        var adot = [['a*x11', 'a*x12'], ['a*x21', 'a*x22']];
+        var fx = [['f(x11)', 'f(x12)'], ['f(x21)', 'f(x22)']];
+        var x23 = [['x11', 'x12', 'x13'], ['x21', 'x22', 'x23']];
+        var transpose = [['x11', '21'], ['x12', '22'], ['x21', '23']];
+        var y32 = [['y11', 'y12'], ['y21', 'y22'], ['y31', 'y32']];
+        var xydot = [
+            [
+                'x11*y11 + x12*y21 + x13*y31',
+                'x11*y12 + x12*y22 + x13*y32',
+            ],
+            [
+                'x21*y11 + x22*y21 + x23*y31',
+                'x21*y12 + x22*y22 + x23*y32',
+            ]
+        ];
+        return (React.createElement("div", { className: "math-intro" },
+            React.createElement("div", { className: "math-intro-header" }, "Brief Function Guide:"),
+            React.createElement("div", { className: "math", ref: function (input) { _this.sigmoidElement = input; } }),
+            React.createElement("div", { className: "math", ref: function (input) { _this.sigmoidDerivElement = input; } }),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: x22, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, "+"),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: y22, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, "="),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: plus, colorize: false, fullString: true })))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: x23, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, "\u00B7"),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: y32, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, "="),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: xydot, colorize: false, fullString: true })))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", null, "a"),
+                    React.createElement("td", { className: "symbol" }, "\u00B7"),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: x22, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, "="),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: adot, colorize: false, fullString: true })))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", { className: "symbol" }, "T("),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: x23, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, ")="),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: transpose, colorize: false, fullString: true })))),
+            React.createElement("table", { className: "display-table" },
+                React.createElement("tr", null,
+                    React.createElement("td", { className: "symbol" }, "f("),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: x22, colorize: false, fullString: true })),
+                    React.createElement("td", { className: "symbol" }, ")="),
+                    React.createElement("td", null,
+                        React.createElement(MatrixTable, { matrix: fx, colorize: false, fullString: true }))))));
+    };
+    return MathIntro;
+}(React.Component));
+var NetworkGraph = (function (_super) {
+    __extends(NetworkGraph, _super);
+    function NetworkGraph(props) {
+        return _super.call(this, props) || this;
     }
-    x += totalNodeWidth;
-    for (var i = 0; i < layer3Count; i++) {
-        ctx.beginPath();
-        ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
-        layer3Locs.push([x, layer3StartY]);
-        layer3StartY += totalNodeHeight;
-        ctx.stroke();
-    }
-    ctx.lineWidth = 2;
-    for (var i = 0; i < layer1Locs.length; i++) {
-        for (var j = 0; j < layer2Locs.length; j++) {
+    NetworkGraph.prototype.componentDidUpdate = function () {
+        this.renderCanvasGraph();
+    };
+    NetworkGraph.prototype.componentDidMount = function () {
+        this.renderCanvasGraph();
+    };
+    NetworkGraph.prototype.renderCanvasGraph = function () {
+        var ctx = this.canvasElement.getContext('2d');
+        ctx.clearRect(0, 0, 250, 400);
+        var styledWeights1 = this.props.styledWeights1;
+        var styledWeights2 = this.props.styledWeights2;
+        var height = this.props.height;
+        var verticalSep = 30;
+        var horizontalSep = 60;
+        var nodeRadius = 10;
+        var layer1Count = styledWeights1.length;
+        var layer2Count = styledWeights1[0].length;
+        var layer3Count = styledWeights2[0].length;
+        var layer1Locs = [];
+        var layer2Locs = [];
+        var layer3Locs = [];
+        var totalNodeHeight = nodeRadius * 2 + verticalSep;
+        var totalNodeWidth = nodeRadius * 2 + horizontalSep;
+        var x = (this.props.width / 2) - ((totalNodeWidth * (3 - 1)) / 2);
+        var layer1StartY = (height / 2) - ((totalNodeHeight * (layer1Count - 1)) / 2);
+        var layer2StartY = (height / 2) - ((totalNodeHeight * (layer2Count - 1)) / 2);
+        var layer3StartY = (height / 2) - ((totalNodeHeight * (layer3Count - 1)) / 2);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = 'rgba(0, 0 , 0, 1)';
+        for (var i = 0; i < layer1Count; i++) {
             ctx.beginPath();
-            ctx.strokeStyle = styledWeights1[i][j];
-            ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
-            ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+            ctx.arc(x, layer1StartY, nodeRadius, 0, Math.PI * 2, true);
+            layer1Locs.push([x, layer1StartY]);
+            layer1StartY += totalNodeHeight;
             ctx.stroke();
         }
-    }
-    for (var i = 0; i < layer2Locs.length; i++) {
-        for (var j = 0; j < layer3Locs.length; j++) {
+        x += totalNodeWidth;
+        for (var i = 0; i < layer2Count; i++) {
             ctx.beginPath();
-            ctx.strokeStyle = styledWeights2[i][j];
-            ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
-            ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+            ctx.arc(x, layer2StartY, nodeRadius, 0, Math.PI * 2, true);
+            layer2Locs.push([x, layer2StartY]);
+            layer2StartY += totalNodeHeight;
             ctx.stroke();
         }
-    }
-}
-function renderCanvasGraph(styledWeights1, styledWeights2) {
-    var canvas = document.getElementById('canvas-graph');
-    var ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, 250, 400);
-    renderCanvasGraphLayer(ctx, styledWeights1, styledWeights2);
-}
+        x += totalNodeWidth;
+        for (var i = 0; i < layer3Count; i++) {
+            ctx.beginPath();
+            ctx.arc(x, layer3StartY, nodeRadius, 0, Math.PI * 2, true);
+            layer3Locs.push([x, layer3StartY]);
+            layer3StartY += totalNodeHeight;
+            ctx.stroke();
+        }
+        ctx.lineWidth = 2;
+        for (var i = 0; i < layer1Locs.length; i++) {
+            for (var j = 0; j < layer2Locs.length; j++) {
+                ctx.beginPath();
+                ctx.strokeStyle = styledWeights1[i][j];
+                ctx.moveTo(layer1Locs[i][0], layer1Locs[i][1]);
+                ctx.lineTo(layer2Locs[j][0], layer2Locs[j][1]);
+                ctx.stroke();
+            }
+        }
+        for (var i = 0; i < layer2Locs.length; i++) {
+            for (var j = 0; j < layer3Locs.length; j++) {
+                ctx.beginPath();
+                ctx.strokeStyle = styledWeights2[i][j];
+                ctx.moveTo(layer2Locs[i][0], layer2Locs[i][1]);
+                ctx.lineTo(layer3Locs[j][0], layer3Locs[j][1]);
+                ctx.stroke();
+            }
+        }
+    };
+    NetworkGraph.prototype.render = function () {
+        var _this = this;
+        return React.createElement("canvas", { ref: function (input) { _this.canvasElement = input; }, width: this.props.width, height: this.props.height });
+    };
+    return NetworkGraph;
+}(React.Component));
 var SingleLayerDisplay = (function (_super) {
     __extends(SingleLayerDisplay, _super);
     function SingleLayerDisplay(props) {
@@ -275,7 +394,6 @@ var SingleLayerDisplay = (function (_super) {
         this.setState({
             iteration: iteration
         });
-        this.renderWeightsToCanvas();
     };
     SingleLayerDisplay.prototype.handleLearningRateChange = function (event) {
         this.setState({
@@ -301,34 +419,16 @@ var SingleLayerDisplay = (function (_super) {
             networkState: newState,
             hiddenLayerSize: this.state.tempHiddenLayerSize
         });
-        this.nonReactRenders();
-    };
-    SingleLayerDisplay.prototype.getCurrentLayer1 = function () {
-        return this.state.networkState.iterations[this.state.iteration][0];
-    };
-    SingleLayerDisplay.prototype.getCurrentLayer2 = function () {
-        return this.state.networkState.iterations[this.state.iteration][1];
-    };
-    SingleLayerDisplay.prototype.renderWeightsToCanvas = function () {
-        var styledWeights1 = MatrixUtil.mapOneToOne(this.getCurrentLayer1().weights, function (weight) { return weightToStyle(weight)['background-color']; });
-        var styledWeights2 = MatrixUtil.mapOneToOne(this.getCurrentLayer2().weights, function (weight) { return weightToStyle(weight)['background-color']; });
-        renderCanvasGraph(styledWeights1, styledWeights2);
-    };
-    SingleLayerDisplay.prototype.nonReactRenders = function () {
-        this.renderWeightsToCanvas();
-        this.state.networkState.plotData.render('error-plot', 'Error');
-    };
-    SingleLayerDisplay.prototype.componentDidUpdate = function () {
-        this.nonReactRenders();
-    };
-    SingleLayerDisplay.prototype.componentDidMount = function () {
-        this.nonReactRenders();
     };
     SingleLayerDisplay.prototype.render = function () {
-        var layer1 = this.getCurrentLayer1();
-        var layer2 = this.getCurrentLayer2();
+        var layer1 = this.state.networkState.iterations[this.state.iteration][0];
+        var layer2 = this.state.networkState.iterations[this.state.iteration][1];
         var finalError = this.state.networkState.finalError;
+        var plotData = this.state.networkState.plotData;
+        var styledWeights1 = MatrixUtil.mapOneToOne(layer1.weights, function (weight) { return MatrixUtil.weightToColor(weight); });
+        var styledWeights2 = MatrixUtil.mapOneToOne(layer2.weights, function (weight) { return MatrixUtil.weightToColor(weight); });
         return (React.createElement("div", null,
+            React.createElement(MathIntro, null),
             React.createElement("div", { className: "input-section" },
                 React.createElement("div", { className: "input-field" },
                     "Hidden Layer Size: ",
@@ -340,92 +440,208 @@ var SingleLayerDisplay = (function (_super) {
                     "Iteration Count: ",
                     React.createElement("input", { value: this.state.tempCount, onInput: this.handleIterationCountChange })),
                 React.createElement("button", { className: "generate-button", onClick: this.handleGenerate }, "Generate")),
-            React.createElement("div", { className: "display-field" },
-                "Hidden Layer Size: ",
-                this.state.hiddenLayerSize),
-            React.createElement("div", { className: "display-field" },
-                "Learning Rate: ",
-                this.state.learningRate),
-            React.createElement("div", { className: "display-field" },
-                "Iteration Count: ",
-                this.state.count),
-            React.createElement("div", { className: "display-field" },
-                "Final Error: ",
-                finalError),
-            React.createElement(IterationSlider, { min: 0, max: this.state.count, value: this.state.iteration, onIterationChange: this.handleIterationChange }),
-            React.createElement("table", { className: "display-table" },
-                React.createElement("tr", null,
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Forward Layer 1")),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Inputs"),
-                        matrixToTable(this.state.networkState.inputData, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weights"),
-                        matrixToTable(layer1.weights, true)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weighted Sum"),
-                        matrixToTable(layer1.hiddenSum, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Output"),
-                        matrixToTable(layer1.hiddenResult, false)))),
-            React.createElement("table", { className: "display-table" },
-                React.createElement("tr", null,
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Forward Layer 2")),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Inputs (Layer 1 Output)"),
-                        matrixToTable(layer1.hiddenResult, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weights"),
-                        matrixToTable(layer2.weights, true)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weighted Sum"),
-                        matrixToTable(layer2.hiddenSum, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Output"),
-                        matrixToTable(layer2.hiddenResult, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Target Output"),
-                        matrixToTable(this.state.networkState.outputTarget, false)))),
-            React.createElement("table", { className: "display-table" },
-                React.createElement("tr", null,
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Back Prop Layer 2")),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Error"),
-                        matrixToTable(layer2.error, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Gradients"),
-                        matrixToTable(layer2.gradients, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Delta"),
-                        matrixToTable(layer2.delta, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weight Updates"),
-                        matrixToTable(layer2.weightUpdates, false)))),
-            React.createElement("table", { className: "display-table" },
-                React.createElement("tr", null,
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Back Prop Layer 1")),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Error"),
-                        matrixToTable(layer1.error, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Gradients"),
-                        matrixToTable(layer1.gradients, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Delta"),
-                        matrixToTable(layer1.delta, false)),
-                    React.createElement("td", null,
-                        React.createElement("div", { className: "matrix-header" }, "Weight Updates"),
-                        matrixToTable(layer1.weightUpdates, false)))),
             React.createElement("table", null,
                 React.createElement("tr", null,
                     React.createElement("td", null,
-                        React.createElement("canvas", { id: "canvas-graph", width: "250", height: "400" })),
+                        React.createElement("div", { className: "display-field" },
+                            "Hidden Layer Size: ",
+                            this.state.hiddenLayerSize),
+                        React.createElement("div", { className: "display-field" },
+                            "Learning Rate: ",
+                            this.state.learningRate),
+                        React.createElement("div", { className: "display-field" },
+                            "Iteration Count: ",
+                            this.state.count),
+                        React.createElement("div", { className: "display-field" },
+                            "Final Error: ",
+                            finalError),
+                        React.createElement(IterationSlider, { min: 0, max: this.state.count, value: this.state.iteration, onIterationChange: this.handleIterationChange })),
                     React.createElement("td", null,
-                        React.createElement("div", { id: "error-plot" }))))));
+                        React.createElement(NetworkGraph, { styledWeights1: styledWeights1, styledWeights2: styledWeights2, height: 300, width: 300 })),
+                    React.createElement("td", null,
+                        React.createElement(PlotlyGraph, { plotData: plotData, title: "Error", height: 300, width: 400 })))),
+            React.createElement("div", { className: "section" },
+                React.createElement("div", { className: "section-header" }, "Forward Pass: "),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Weighted Sum"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "Inputs"),
+                            React.createElement(MatrixTable, { matrix: this.state.networkState.inputData, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "\u00B7"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Weights"),
+                            React.createElement(MatrixTable, { matrix: layer1.weights, colorize: true })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Output"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenResult, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "= S("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Weighted Sum"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")"))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weighted Sum"),
+                            React.createElement(MatrixTable, { matrix: layer2.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "Inputs (L1 Output)"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenResult, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "\u00B7"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weights"),
+                            React.createElement(MatrixTable, { matrix: layer2.weights, colorize: true })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Output (Final Result)"),
+                            React.createElement(MatrixTable, { matrix: layer2.hiddenResult, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "= S("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weighted Sum"),
+                            React.createElement(MatrixTable, { matrix: layer2.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")"))),
+                React.createElement("div", { className: "section-header" }, "Output: "),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Error"),
+                            React.createElement(MatrixTable, { matrix: layer2.error, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "Target Output"),
+                            React.createElement(MatrixTable, { matrix: this.state.networkState.outputTarget, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "-"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Output"),
+                            React.createElement(MatrixTable, { matrix: layer2.hiddenResult, colorize: false }))))),
+            React.createElement("div", { className: "section" },
+                React.createElement("div", { className: "section-header" }, "Back Propagation Pass: "),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Gradients"),
+                            React.createElement(MatrixTable, { matrix: layer2.gradients, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "= S'("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weighted Sum"),
+                            React.createElement(MatrixTable, { matrix: layer2.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")"))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer2.delta, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Gradients"),
+                            React.createElement(MatrixTable, { matrix: layer2.gradients, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "x"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Error"),
+                            React.createElement(MatrixTable, { matrix: layer2.error, colorize: false })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Error"),
+                            React.createElement(MatrixTable, { matrix: layer1.error, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer2.delta, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "\u00B7T("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weights"),
+                            React.createElement(MatrixTable, { matrix: layer2.weights, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")"))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Gradients"),
+                            React.createElement(MatrixTable, { matrix: layer1.gradients, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "= S'("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Hidden Sum"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenSum, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")"))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer1.delta, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Gradients"),
+                            React.createElement(MatrixTable, { matrix: layer1.gradients, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, "x"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Error"),
+                            React.createElement(MatrixTable, { matrix: layer1.error, colorize: false })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Weight Updates"),
+                            React.createElement(MatrixTable, { matrix: layer1.weightUpdates, colorize: false })),
+                        React.createElement("td", { className: "symbol" },
+                            "= ",
+                            this.state.learningRate,
+                            " \u00B7 T("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "Inputs"),
+                            React.createElement(MatrixTable, { matrix: this.state.networkState.inputData, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")\u00B7"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer1.delta, colorize: false })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weight Updates"),
+                            React.createElement(MatrixTable, { matrix: layer2.weightUpdates, colorize: false })),
+                        React.createElement("td", { className: "symbol" },
+                            "= ",
+                            this.state.learningRate,
+                            " \u00B7 T("),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Output"),
+                            React.createElement(MatrixTable, { matrix: layer1.hiddenResult, colorize: false })),
+                        React.createElement("td", { className: "symbol" }, ")\u00B7"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer2.delta, colorize: false })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "New L1 Weights"),
+                            React.createElement(MatrixTable, { matrix: MatrixUtil.elementAdd(layer1.weightUpdates, layer1.weights), colorize: true })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer1.weights, colorize: true })),
+                        React.createElement("td", { className: "symbol" }, "+"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L1 Weight Updates"),
+                            React.createElement(MatrixTable, { matrix: layer1.weightUpdates, colorize: false })))),
+                React.createElement("table", { className: "display-table" },
+                    React.createElement("tr", null,
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "New L2 Weights"),
+                            React.createElement(MatrixTable, { matrix: MatrixUtil.elementAdd(layer2.weightUpdates, layer2.weights), colorize: true })),
+                        React.createElement("td", { className: "symbol" }, "="),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Delta"),
+                            React.createElement(MatrixTable, { matrix: layer2.weights, colorize: true })),
+                        React.createElement("td", { className: "symbol" }, "+"),
+                        React.createElement("td", null,
+                            React.createElement("div", { className: "matrix-header" }, "L2 Weight Updates"),
+                            React.createElement(MatrixTable, { matrix: layer2.weightUpdates, colorize: false })))))));
     };
     return SingleLayerDisplay;
 }(React.Component));
